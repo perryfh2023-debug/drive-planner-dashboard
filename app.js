@@ -3,7 +3,7 @@
  * FINAL – Correct Date + Time Contract
  *********************************/
 
-const DATA_URL = "/data/events.json";
+const DATA_URL = "/.netlify/functions/events";
 
 /* ===============================
    STATE
@@ -271,4 +271,5 @@ function formatAttendance(val) {
   if (!val || isNaN(val)) return "—";
   return "~" + Number(val).toLocaleString();
 }
+
 
