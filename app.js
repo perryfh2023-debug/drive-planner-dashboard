@@ -3,8 +3,7 @@
  * FINAL – Correct Date + Time Contract
  *********************************/
 
-const DATA_URL =
-  "https://script.google.com/macros/s/AKfycbyRwkz3Ka-K9Z7rTg7nD1LnWwldr5k3qxQh3FWsvfBf9haueSYyFbYCjVM2khdfl2hH/exec";
+const DATA_URL = "/data/events.json";
 
 /* ===============================
    STATE
@@ -272,3 +271,4 @@ function formatAttendance(val) {
   if (!val || isNaN(val)) return "—";
   return "~" + Number(val).toLocaleString();
 }
+
