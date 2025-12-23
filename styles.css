@@ -1,0 +1,90 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f7f7f7;
+  color: #111;
+}
+
+/* Top bar */
+.top-bar {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  padding: 10px;
+}
+
+.city {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.views {
+  display: flex;
+  gap: 6px;
+}
+
+.views button {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  background: #fafafa;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.views button.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+/* Content */
+main {
+  padding: 12px;
+}
+
+/* Cards */
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid #e0e0e0;
+}
+
+.card h3 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+}
+
+.muted {
+  color: #666;
+  font-size: 13px;
+}
+
+.small {
+  font-size: 12px;
+}
+
+/* Day card (week view) */
+.day-card {
+  cursor: pointer;
+}
+
+.day-card:hover {
+  border-color: #bbb;
+}
+
+/* Back link */
+.back {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: #0066cc;
+  cursor: pointer;
+  font-size: 14px;
+}
