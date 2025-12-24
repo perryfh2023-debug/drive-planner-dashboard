@@ -1,25 +1,25 @@
 import { getStore } from "@netlify/blobs";
 
 const SHEETS_URL =
-  https://script.google.com/macros/s/AKfycbzeeE59DtHtjj9B7eQT6W50OG5xRCFYkQpTuawunBfFYY-tpVA7c-QQNldNWtca1FPe/exec
+  "https://script.google.com/macros/s/AKfycbzeeE59DtHtjj9B7eQT6W50OG5xRCFYkQpTuawunBfFYY-tpVA7c-QQNldNWtca1FPe/exec";
 
 export default async (req) => {
   const store = getStore("events");
   const key = "events.json";
 
   try {
-    // WRITE: fetch from Google Sheets and cache
+    // WRITE: fetch from Apps Script and cache
     if (req.method === "POST") {
       const res = await fetch(SHEETS_URL);
-      const events = await res.json();
+      const data = await res.json(); // { events, generatedAt }
 
-      await store.setJSON(key, {
-        events,
-        generatedAt: new Date().toISOString(),
-      });
+      await store.setJSON(key, data);
 
       return new Response(
-        JSON.stringify({ ok: true, count: events.length }),
+        JSON.stringify({
+          ok: true,
+          count: Array.isArray(data.events) ? data.events.length : 0,
+        }),
         { headers: { "Content-Type": "application/json" } }
       );
     }
