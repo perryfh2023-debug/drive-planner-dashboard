@@ -1,17 +1,110 @@
+let allEvents = [];
+let currentView = "week";
+
 async function loadEvents() {
   try {
     const res = await fetch("/.netlify/functions/events");
     const data = await res.json();
 
-    // Defensive: ensure we always pass an array
-    renderEvents(Array.isArray(data.events) ? data.events : []);
+    allEvents = Array.isArray(data.events) ? normalizeEvents(data.events) : [];
+    applyView();
   } catch (err) {
     console.error("Failed to load events", err);
-    const app = document.getElementById("app");
-    app.innerHTML = "<p class='muted'>Failed to load events.</p>";
+    document.getElementById("app").innerHTML =
+      "<p class='muted'>Failed to load events.</p>";
   }
 }
 
+/**
+ * Create canonical Date objects for filtering
+ */
+function normalizeEvents(events) {
+  return events.map(event => {
+    const start = buildDateTime(event.startDate, event.startTime);
+    const end = buildDateTime(event.endDate, event.endTime);
+
+    return {
+      ...event,
+      _start: start,
+      _end: end
+    };
+  });
+}
+
+function buildDateTime(dateStr, timeStr) {
+  if (!dateStr) return null;
+
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+
+  if (timeStr) {
+    const t = new Date(timeStr);
+    if (!isNaN(t)) {
+      d.setHours(t.getHours(), t.getMinutes(), 0, 0);
+    }
+  }
+
+  return d;
+}
+
+/**
+ * Apply active view filter
+ */
+function applyView() {
+  const now = new Date();
+  let filtered = [];
+
+  if (currentView === "day") {
+    filtered = allEvents.filter(e =>
+      e._start &&
+      e._start.toDateString() === now.toDateString()
+    );
+  }
+
+  if (currentView === "week") {
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+    filtered = allEvents.filter(e =>
+      e._start &&
+      e._start >= startOfWeek &&
+      e._start < endOfWeek
+    );
+  }
+
+  if (currentView === "month") {
+    filtered = allEvents.filter(e =>
+      e._start &&
+      e._start.getMonth() === now.getMonth() &&
+      e._start.getFullYear() === now.getFullYear()
+    );
+  }
+
+  renderEvents(filtered);
+}
+
+/**
+ * Wire view buttons
+ */
+document.querySelectorAll("[data-view]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll("[data-view]")
+      .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+    currentView = btn.dataset.view;
+    applyView();
+  });
+});
+
+/**
+ * Render cards
+ */
 function renderEvents(events) {
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -21,52 +114,28 @@ function renderEvents(events) {
     return;
   }
 
-  events.forEach(event => {
-    const card = document.createElement("div");
-    card.className = "card";
+  events
+    .sort((a, b) => a._start - b._start)
+    .forEach(event => {
+      const card = document.createElement("div");
+      card.className = "card";
 
-    const startLabel = formatDateTime(
-      event.startDate,
-      event.startTime
-    );
+      card.innerHTML = `
+        <h3>${event.title}</h3>
+        <div class="muted">${event.venue ?? ""}</div>
+        <div class="small">
+          ${formatDateTime(event._start)}
+        </div>
+      `;
 
-    const endLabel =
-      event.endDate || event.endTime
-        ? formatDateTime(event.endDate, event.endTime)
-        : null;
-
-    card.innerHTML = `
-      <h3>${event.title}</h3>
-      <div class="muted">${event.venue ?? ""}</div>
-      <div class="small">
-        ${startLabel}${endLabel ? " – " + endLabel : ""}
-      </div>
-    `;
-
-    app.appendChild(card);
-  });
+      app.appendChild(card);
+    });
 }
 
-/**
- * Combines separate date + time values coming from Apps Script
- * - dateStr: Date or date-like string
- * - timeStr: Date or time-only Date (1899-12-30 base)
- */
-function formatDateTime(dateStr, timeStr) {
-  if (!dateStr) return "";
-
-  const date = new Date(dateStr);
-  if (isNaN(date)) return "";
-
-  if (timeStr) {
-    const time = new Date(timeStr);
-    if (!isNaN(time)) {
-      date.setHours(time.getHours(), time.getMinutes());
-    }
-  }
-
+function formatDateTime(date) {
+  if (!date) return "";
   return date.toLocaleString();
 }
 
-// Load events on page load
+// Initial load
 loadEvents();
