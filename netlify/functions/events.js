@@ -1,7 +1,7 @@
 import { getStore } from "@netlify/blobs";
 
 const SHEETS_URL =
-  "https://script.google.com/macros/s/AKfycbyRwkz3Ka-K9Z7rTg7nD1LnWwldr5k3qxQh3FWsvfBf9haueSYyFbYCjVM2khdfl2hH/exec";
+  https://script.google.com/macros/s/AKfycbzeeE59DtHtjj9B7eQT6W50OG5xRCFYkQpTuawunBfFYY-tpVA7c-QQNldNWtca1FPe/exec
 
 export default async (req) => {
   const store = getStore("events");
