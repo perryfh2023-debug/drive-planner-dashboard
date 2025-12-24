@@ -1,26 +1,37 @@
-const { getStore } = require("@netlify/blobs");
+import { getStore } from "@netlify/blobs";
 
-exports.handler = async function () {
+export default async (req) => {
   const store = getStore("events");
+  const key = "events.json";
 
-  await store.setJSON("events.json", {
-    events: [
-      {
-        title: "Blob Test Event",
-        start: "2025-12-24T18:00:00",
-        end: "2025-12-24T21:00:00",
-        venue: "Test Venue",
-        category: "test"
-      }
-    ],
-    generatedAt: new Date().toISOString()
-  });
+  try {
+    // WRITE (future automation)
+    if (req.method === "POST") {
+      const payload = await req.json();
 
-  const data = await store.get("events.json", { type: "json" });
+      await store.setJSON(key, {
+        events: payload.events ?? [],
+        generatedAt: new Date().toISOString(),
+      });
 
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  };
+      return new Response(
+        JSON.stringify({ ok: true }),
+        { headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // READ (dashboard)
+    const cached = await store.getJSON(key);
+
+    return new Response(
+      JSON.stringify(cached ?? { events: [] }),
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ ok: false, error: String(err) }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 };
