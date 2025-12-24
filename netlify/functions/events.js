@@ -21,7 +21,7 @@ export default async (req) => {
     }
 
     // READ (dashboard)
-    const cached = await store.getJSON(key);
+    const cached = await store.get(key, { type: "json" });
 
     return new Response(
       JSON.stringify(cached ?? { events: [] }),
