@@ -6,7 +6,14 @@ async function loadEvents() {
     const res = await fetch("/.netlify/functions/events");
     const data = await res.json();
 
-    allEvents = Array.isArray(data.events) ? normalizeEvents(data.events) : [];
+    const normalized = Array.isArray(data.events)
+      ? normalizeEvents(data.events)
+      : [];
+
+    // ✅ FUTURE EVENTS ONLY (single source of truth)
+    const now = new Date();
+    allEvents = normalized.filter(e => e._start && e._start >= now);
+
     applyView();
   } catch (err) {
     console.error("Failed to load events", err);
@@ -48,7 +55,7 @@ function buildDateTime(dateStr, timeStr) {
 }
 
 /**
- * Apply active view filter
+ * Apply active view filter (future-only already enforced)
  */
 function applyView() {
   const now = new Date();
@@ -56,7 +63,6 @@ function applyView() {
 
   if (currentView === "day") {
     filtered = allEvents.filter(e =>
-      e._start &&
       e._start.toDateString() === now.toDateString()
     );
   }
@@ -70,15 +76,12 @@ function applyView() {
     endOfWeek.setDate(startOfWeek.getDate() + 7);
 
     filtered = allEvents.filter(e =>
-      e._start &&
-      e._start >= startOfWeek &&
-      e._start < endOfWeek
+      e._start >= startOfWeek && e._start < endOfWeek
     );
   }
 
   if (currentView === "month") {
     filtered = allEvents.filter(e =>
-      e._start &&
       e._start.getMonth() === now.getMonth() &&
       e._start.getFullYear() === now.getFullYear()
     );
@@ -110,7 +113,7 @@ function renderEvents(events) {
   app.innerHTML = "";
 
   if (events.length === 0) {
-    app.innerHTML = "<p class='muted'>No events available.</p>";
+    app.innerHTML = "<p class='muted'>No upcoming events.</p>";
     return;
   }
 
