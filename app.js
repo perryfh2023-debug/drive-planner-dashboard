@@ -253,31 +253,9 @@ function formatDateTime(date) {
   return `${displayHour}:${displayMinutes} ${period}`;
 }
 
-document.querySelectorAll("[data-view]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document
-      .querySelectorAll("[data-view]")
-      .forEach(b => b.classList.remove("active"));
-
-    btn.classList.add("active");
-
-    if (btn.dataset.view === "day") {
-      currentView = "day";
-
-      // 👇 Explicitly select TODAY
-      const today = new Date();
-      selectedDayKey = today.toISOString().split("T")[0];
-    } else {
-      currentView = "default";
-      selectedDayKey = null;
-    }
-
-    applyView();
-  });
-});
-
 // Initial load
 loadEvents();
+
 
 
 
