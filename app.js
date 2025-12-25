@@ -145,6 +145,17 @@ document.querySelectorAll("[data-view]").forEach(btn => {
   });
 });
 
+function getDaySummary(events) {
+  const eventCount = events.length;
+  const attendanceSum = totalAttendance(events);
+
+  return {
+    eventCount,
+    attendanceSum,
+    events // keep reference for later use
+  };
+}
+
 /* ---------- Attendance helpers ---------- */
 function formatAttendance(num) {
   const n = Number(num);
@@ -186,12 +197,12 @@ function renderSummaryView(grouped) {
 
     const count = document.createElement("div");
     count.className = "muted";
-    count.textContent = `${grouped[dayKey].length} events`;
+    const summary = getDaySummary(grouped[dayKey]); count.textContent = `${summary.eventCount} events`;
 
     dayBlock.appendChild(header);
     dayBlock.appendChild(count);
 
-    const attendanceTotal = totalAttendance(grouped[dayKey]);
+    const attendanceTotal = summary.attendanceSum;
 
     if (attendanceTotal > 0) {
       const attendance = document.createElement("div");
@@ -328,4 +339,5 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
