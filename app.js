@@ -159,6 +159,9 @@ function totalAttendance(events) {
     return Number.isFinite(n) && n > 0 ? sum + n : sum;
   }, 0);
 }
+const maxAttendance = 50000; // soft cap, not shown
+const intensity = Math.min(attendanceTotal / maxAttendance, 1);
+dayBlock.style.setProperty("--density", intensity);
 
 /**
  * SUMMARY VIEW (Week / Month)
@@ -384,6 +387,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
