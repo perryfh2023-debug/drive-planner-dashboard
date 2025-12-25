@@ -1,5 +1,5 @@
 let allEvents = [];
-let currentView = "week";
+let currentView = "default";
 
 async function loadEvents() {
   try {
@@ -10,7 +10,7 @@ async function loadEvents() {
       ? normalizeEvents(data.events)
       : [];
 
-    // ✅ FUTURE EVENTS ONLY (single source of truth)
+    // FUTURE EVENTS ONLY
     const now = new Date();
     allEvents = normalized.filter(e => e._start && e._start >= now);
 
@@ -23,7 +23,7 @@ async function loadEvents() {
 }
 
 /**
- * Create canonical Date objects for filtering
+ * Normalize dates
  */
 function normalizeEvents(events) {
   return events.map(event => {
@@ -55,7 +55,7 @@ function buildDateTime(dateStr, timeStr) {
 }
 
 /**
- * Apply active view filter (future-only already enforced)
+ * Group events by day
  */
 function groupEventsByDay(events) {
   return events.reduce((acc, event) => {
@@ -63,22 +63,23 @@ function groupEventsByDay(events) {
 
     const dayKey = event._start.toISOString().split("T")[0];
 
-    if (!acc[dayKey]) {
-      acc[dayKey] = [];
-    }
-
+    if (!acc[dayKey]) acc[dayKey] = [];
     acc[dayKey].push(event);
+
     return acc;
   }, {});
 }
 
+/**
+ * Apply view (future-forward only)
+ */
 function applyView() {
-  const now = new Date();
   let filtered = [];
 
   if (currentView === "day") {
+    const today = new Date();
     filtered = allEvents.filter(e =>
-      e._start.toDateString() === now.toDateString()
+      e._start.toDateString() === today.toDateString()
     );
   } else {
     filtered = allEvents;
@@ -87,28 +88,6 @@ function applyView() {
   const grouped = groupEventsByDay(filtered);
   renderGroupedEvents(grouped);
 }
-
-  if (currentView === "week") {
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 7);
-
-    filtered = allEvents.filter(e =>
-      e._start >= startOfWeek && e._start < endOfWeek
-    );
-  }
-
-  if (currentView === "month") {
-    filtered = allEvents.filter(e =>
-      e._start.getMonth() === now.getMonth() &&
-      e._start.getFullYear() === now.getFullYear()
-    );
-  }
-
-  renderEvents(filtered);
 
 /**
  * Wire view buttons
@@ -120,41 +99,14 @@ document.querySelectorAll("[data-view]").forEach(btn => {
       .forEach(b => b.classList.remove("active"));
 
     btn.classList.add("active");
-    currentView = btn.dataset.view;
+    currentView = btn.dataset.view === "day" ? "day" : "default";
     applyView();
   });
 });
 
 /**
- * Render cards
+ * Render grouped events
  */
-function renderEvents(events) {
-  const app = document.getElementById("app");
-  app.innerHTML = "";
-
-  if (events.length === 0) {
-    app.innerHTML = "<p class='muted'>No upcoming events.</p>";
-    return;
-  }
-
-  events
-    .sort((a, b) => a._start - b._start)
-    .forEach(event => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      card.innerHTML = `
-        <h3>${event.title}</h3>
-        <div class="muted">${event.venue ?? ""}</div>
-        <div class="small">
-          ${formatDateTime(event._start)}
-        </div>
-      `;
-
-      app.appendChild(card);
-    });
-}
-
 function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -172,7 +124,6 @@ function renderGroupedEvents(grouped) {
 
     const header = document.createElement("h2");
     header.textContent = new Date(dayKey).toDateString();
-
     dayBlock.appendChild(header);
 
     grouped[dayKey]
@@ -181,11 +132,10 @@ function renderGroupedEvents(grouped) {
         const card = document.createElement("div");
         card.className = "card";
 
-        card.innerHTML = `
-          <h3>${event.title}</h3>
-          <div class="muted">${event.venue ?? ""}</div>
-          <div class="small">${formatDateTime(event._start)}</div>
-        `;
+        card.innerHTML =
+          "<h3>" + (event.title || "") + "</h3>" +
+          "<div class='muted'>" + (event.venue || "") + "</div>" +
+          "<div class='small'>" + formatDateTime(event._start) + "</div>";
 
         dayBlock.appendChild(card);
       });
@@ -201,5 +151,3 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
-
-
