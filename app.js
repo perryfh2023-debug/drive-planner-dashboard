@@ -109,7 +109,6 @@ function applyView() {
   }
 
   renderEvents(filtered);
-}
 
 /**
  * Wire view buttons
@@ -202,4 +201,5 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
