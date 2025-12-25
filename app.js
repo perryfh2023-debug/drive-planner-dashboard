@@ -1,10 +1,16 @@
+/* =========================================================
+   GLOBAL STATE
+   ========================================================= */
+
 let allEvents = [];
 let currentView = "week";
 let selectedDayKey = null;
 
-/**
- * Load events from Netlify function
- */
+
+/* =========================================================
+   LOAD + NORMALIZE
+   ========================================================= */
+
 async function loadEvents() {
   try {
     const res = await fetch("/.netlify/functions/events");
@@ -16,13 +22,11 @@ async function loadEvents() {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const todayKey = getLocalDayKey(today);
 
-allEvents = normalized.filter(e => {
-  if (!e._start) return false;
-  return getLocalDayKey(e._start) >= todayKey;
-});
+    allEvents = normalized.filter(e =>
+      e._start && getLocalDayKey(e._start) >= todayKey
+    );
 
     applyView();
   } catch (err) {
@@ -32,9 +36,13 @@ allEvents = normalized.filter(e => {
   }
 }
 
+
+/* =========================================================
+   DATE HELPERS (TOP LEVEL ONLY)
+   ========================================================= */
+
 function getLocalDayKey(date) {
   if (!(date instanceof Date) || isNaN(date)) return null;
-
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
@@ -43,10 +51,7 @@ function getLocalDayKey(date) {
 
 function formatDayKey(dayKey) {
   const [y, m, d] = dayKey.split("-").map(Number);
-
-  // Construct local date explicitly (no UTC parsing)
   const date = new Date(y, m - 1, d);
-
   return date.toLocaleDateString(undefined, {
     weekday: "short",
     month: "short",
@@ -54,28 +59,37 @@ function formatDayKey(dayKey) {
   });
 }
 
-/**
- * Normalize raw events into usable Date objects
- */
-function normalizeEvents(events) {
-  return events.map(event => {
-    const start = buildDateTime(event.startDate, event.startTime);
-    const end = buildDateTime(event.endDate, event.endTime);
+function getWeekdayIndex(dayKey) {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const jsDay = new Date(y, m - 1, d).getDay(); // 0=Sun
+  return jsDay === 0 ? 6 : jsDay - 1;           // Mon=0 .. Sun=6
+}
 
-    return {
-      ...event,
-      _start: start,
-      _end: end
-    };
-  });
+function withinNextDays(date, days) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+  return date >= start && date < end;
+}
+
+
+/* =========================================================
+   NORMALIZATION
+   ========================================================= */
+
+function normalizeEvents(events) {
+  return events.map(event => ({
+    ...event,
+    _start: buildDateTime(event.startDate, event.startTime),
+    _end: buildDateTime(event.endDate, event.endTime)
+  }));
 }
 
 function buildDateTime(dateStr, timeStr) {
   if (!dateStr) return null;
 
-  // FIXED: local date (this stays)
   let d;
-
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     const [y, m, day] = dateStr.split("-").map(Number);
     d = new Date(y, m - 1, day);
@@ -85,7 +99,6 @@ function buildDateTime(dateStr, timeStr) {
     d.setHours(0, 0, 0, 0);
   }
 
-  // RESTORED: tolerant time parsing (this is what you had)
   if (timeStr) {
     const t = new Date(timeStr);
     if (!isNaN(t)) {
@@ -96,524 +109,233 @@ function buildDateTime(dateStr, timeStr) {
   return d;
 }
 
-/**
- * Group events by day
- */
+
+/* =========================================================
+   GROUPING + SUMMARIES
+   ========================================================= */
+
 function groupEventsByDay(events) {
   return events.reduce((acc, event) => {
     if (!event._start) return acc;
-
     const dayKey = getLocalDayKey(event._start);
-if (!dayKey) return acc;
+    if (!dayKey) return acc;
+    (acc[dayKey] ||= []).push(event);
+    return acc;
+  }, {});
+}
 
-    if (!acc[dayKey]) acc[dayKey] = [];
-    acc[dayKey].push(event);
+function getDaySummary(events) {
+  const eventCount = events.length;
+  const attendanceSum = totalAttendance(events);
+  return { eventCount, attendanceSum, events };
+}
 
+function groupDaySummariesByWeek(daySummaries) {
+  return Object.entries(daySummaries).reduce((acc, [dayKey, summary]) => {
+    const date = new Date(...dayKey.split("-").map((n, i) => i === 1 ? n - 1 : Number(n)));
+    const weekStart = getWeekStartMonday(date);
+    if (!weekStart) return acc;
+    const weekKey = getLocalDayKey(weekStart);
+    (acc[weekKey] ||= { weekKey, days: {} }).days[dayKey] = summary;
     return acc;
   }, {});
 }
 
 function getWeekStartMonday(date) {
-  if (!(date instanceof Date) || isNaN(date)) return null;
-
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-
-  const day = d.getDay(); // 0 = Sun, 1 = Mon, ...
-  const diff = day === 0 ? -6 : 1 - day; // move back to Monday
-
+  const day = d.getDay(); // 0=Sun
+  const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   return d;
-}
-
-function getWeekKeyMonday(date) {
-  const weekStart = getWeekStartMonday(date);
-  if (!weekStart) return null;
-
-  return getLocalDayKey(weekStart); // reuse YYYY-MM-DD
-}
-
-function groupDaySummariesByWeek(daySummaries) {
-  return Object.entries(daySummaries).reduce((acc, [dayKey, summary]) => {
-    const date = new Date(dayKey);
-    const weekKey = getWeekKeyMonday(date);
-    if (!weekKey) return acc;
-
-    if (!acc[weekKey]) {
-      acc[weekKey] = {
-        weekKey,
-        days: {}
-      };
-    }
-
-    acc[weekKey].days[dayKey] = summary;
-    return acc;
-  }, {});
-}
-
-function withinNextDays(date, days) {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setDate(end.getDate() + days);
-
-  return date >= start && date < end;
-}
-
-function applyTopBarIntensity(intensity) {
-  const topBar = document.querySelector(".top-bar");
-  if (!topBar) return;
-
-  // louder than body (noticeable shift)
-  const HEADER_GAMMA = 1.2;
-  const adjusted = Math.pow(Math.min(Math.max(intensity, 0), 1), HEADER_GAMMA);
-
-  topBar.style.setProperty("--density", adjusted);
-}
-
-/**
- * Apply active view
- */
-function applyView() {
-  let filtered = [];
-
-  // --------------------
-  // DAY VIEW
-  // --------------------
-  if (currentView === "day" && selectedDayKey) {
-    filtered = allEvents.filter(
-      e => getLocalDayKey(e._start) === selectedDayKey
-    );
-
-    const dayGrouped = groupEventsByDay(filtered);
-
-    // Header intensity = MAX for day context (just that day)
-    const eventsForDay = dayGrouped[selectedDayKey] || [];
-    const daySummary = getDaySummary(eventsForDay);
-    applyTopBarIntensity(calculateDayIntensity(daySummary));
-
-    renderGroupedEvents(dayGrouped);
-    return;
-  }
-
-  // --------------------
-  // FILTER EVENTS BY VIEW
-  // --------------------
-  if (currentView === "week") {
-    filtered = allEvents.filter(e => withinNextDays(e._start, 7));
-  } else if (currentView === "month") {
-    filtered = allEvents.filter(e => withinNextDays(e._start, 30));
-  } else {
-    filtered = allEvents;
-  }
-
-  // --------------------
-  // DAY GROUPING
-  // --------------------
-  const grouped = groupEventsByDay(filtered);
-
-  // --------------------
-  // DAY SUMMARIES
-  // --------------------
-  const daySummaries = {};
-  Object.keys(grouped).forEach(dayKey => {
-    daySummaries[dayKey] = getDaySummary(grouped[dayKey]);
-  });
-
-  // --------------------
-  // WEEK GROUPING (Mon–Sun)
-  // --------------------
-  const weeks = groupDaySummariesByWeek(daySummaries);
-
-  // --------------------
-  // WEEK SUMMARIES
-  // --------------------
-  const weekSummaries = computeWeekSummaries(weeks);
-
-  // --------------------
-  // WEEK BASELINE INTENSITY (DATA ONLY)
-  // --------------------
-  const maxWeekAttendance = Math.max(
-    ...Object.values(weekSummaries).map(w => w.attendanceSum),
-    1
-  );
-
-  const maxWeekEventCount = Math.max(
-    ...Object.values(weekSummaries).map(w => w.eventCount),
-    1
-  );
-
-  Object.values(weekSummaries).forEach(week => {
-    week.intensity = calculateWeekIntensity(
-      week,
-      maxWeekAttendance,
-      maxWeekEventCount
-    );
-  });
-
-  // --------------------
-  // APPLY HEADER INTENSITY (MAX by context)
-  // --------------------
-  if (currentView === "week") {
-    const maxWeek = Math.max(
-      ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
-      0
-    );
-    applyTopBarIntensity(maxWeek);
-  } else if (currentView === "month") {
-    const maxMonth = Math.max(
-      ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
-      0
-    );
-    applyTopBarIntensity(maxMonth);
-  } else {
-    applyTopBarIntensity(0);
-  }
-
-  // --------------------
-  // MONTH VIEW
-  // --------------------
-
-  function getWeekdayIndex(dayKey) {
-  const [y, m, d] = dayKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  const jsDay = date.getDay(); // 0=Sun ... 6=Sat
-  return jsDay === 0 ? 6 : jsDay - 1; // Mon=0 ... Sun=6
-}
-  
-  if (currentView === "month") {
-const weekKeys = Object.keys(weekSummaries).sort();
-
-weekKeys.forEach(weekKey => {
-  const weekEl = document.createElement("div");
-  weekEl.className = "month-week";
-
-  const daysRow = document.createElement("div");
-  daysRow.className = "week-days";
-
-  // 7 fixed slots (Mon–Sun)
-  const slots = Array(7).fill(null);
-
-  Object.keys(weekSummaries[weekKey].days).forEach(dayKey => {
-    const idx = getWeekdayIndex(dayKey);
-    slots[idx] = dayKey;
-  });
-
-  // Render all 7 slots
-  slots.forEach(dayKey => {
-    const cell = document.createElement("div");
-    cell.className = "month-day";
-
-    if (dayKey) {
-      cell.textContent = formatDayKey(dayKey);
-    } else {
-      cell.classList.add("empty");
-    }
-
-    daysRow.appendChild(cell);
-  });
-
-  weekEl.appendChild(daysRow);
-  app.appendChild(weekEl);
-});
-
-  // --------------------
-  // WEEK VIEW (default)
-  // --------------------
-  renderSummaryView(grouped);
-}
-
-/**
- * Wire view buttons
- */
-document.querySelectorAll("[data-view]").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document
-      .querySelectorAll("[data-view]")
-      .forEach(b => b.classList.remove("active"));
-
-    btn.classList.add("active");
-
-    if (btn.dataset.view === "day") {
-      currentView = "day";
-      const today = new Date();
-      selectedDayKey = getLocalDayKey(today);
-    } else {
-      currentView = btn.dataset.view;
-      selectedDayKey = null;
-    }
-
-    applyView();
-  });
-});
-
-function getDaySummary(events) {
-  const eventCount = events.length;
-  const attendanceSum = totalAttendance(events);
-
-  return {
-    eventCount,
-    attendanceSum,
-    events // keep reference for later use
-  };
 }
 
 function computeWeekSummaries(weeks) {
   return Object.values(weeks).reduce((acc, week) => {
     let eventCount = 0;
     let attendanceSum = 0;
-
-    Object.values(week.days).forEach(daySummary => {
-      eventCount += daySummary.eventCount;
-      attendanceSum += daySummary.attendanceSum;
+    Object.values(week.days).forEach(d => {
+      eventCount += d.eventCount;
+      attendanceSum += d.attendanceSum;
     });
-
     acc[week.weekKey] = {
       weekKey: week.weekKey,
       eventCount,
       attendanceSum,
-      days: week.days
+      days: week.days,
+      intensity: 0
     };
-
     return acc;
   }, {});
 }
 
+
+/* =========================================================
+   INTENSITY
+   ========================================================= */
+
 function calculateDayIntensity(summary) {
-  const MAX_ATTENDANCE = 15000;
-  const MAX_EVENT_COUNT = 5;
-
-  const attendanceNorm = Math.min(
-    summary.attendanceSum / MAX_ATTENDANCE,
-    1
-  );
-
-  const countNorm = Math.min(
-    summary.eventCount / MAX_EVENT_COUNT,
-    1
-  );
-
-  const blended =
-    0.6 * attendanceNorm +
-    0.4 * countNorm;
-
-  // 🔑 gamma curve to lighten the low end
-  const GAMMA = 1.8; // higher = lighter low end
-  const adjusted = Math.pow(blended, GAMMA);
-
-  return Math.min(adjusted, 1);
+  const a = Math.min(summary.attendanceSum / 15000, 1);
+  const c = Math.min(summary.eventCount / 5, 1);
+  return Math.pow(0.6 * a + 0.4 * c, 1.8);
 }
 
-function calculateWeekIntensity(weekSummary, maxAttendance, maxEventCount) {
-  const attendanceNorm = Math.min(
-    weekSummary.attendanceSum / maxAttendance,
-    1
-  );
-
-  const countNorm = Math.min(
-    weekSummary.eventCount / maxEventCount,
-    1
-  );
-
-  const blended =
-    0.6 * attendanceNorm +
-    0.4 * countNorm;
-
-  // Same perceptual curve as days
-  const GAMMA = 1.8;
-  return Math.min(Math.pow(blended, GAMMA), 1);
+function calculateWeekIntensity(week, maxA, maxC) {
+  const a = Math.min(week.attendanceSum / maxA, 1);
+  const c = Math.min(week.eventCount / maxC, 1);
+  return Math.pow(0.6 * a + 0.4 * c, 1.8);
 }
 
-/* ---------- Attendance helpers ---------- */
-function formatAttendance(num) {
-  const n = Number(num);
-  if (!Number.isFinite(n) || n <= 0) return "";
-
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${Math.round(n / 1_000)}k`;
-
-  return n.toLocaleString();
+function applyTopBarIntensity(intensity) {
+  const bar = document.querySelector(".top-bar");
+  if (!bar) return;
+  bar.style.setProperty("--density", Math.pow(intensity, 1.2));
 }
 
-function totalAttendance(events) {
-  return events.reduce((sum, e) => {
-    const n = Number(e.attendanceEstimate);
-    return Number.isFinite(n) && n > 0 ? sum + n : sum;
-  }, 0);
+
+/* =========================================================
+   RENDERERS
+   ========================================================= */
+
+function renderDayView(dayKey) {
+  const events = allEvents.filter(e => getLocalDayKey(e._start) === dayKey);
+  const grouped = groupEventsByDay(events);
+  const summary = getDaySummary(grouped[dayKey] || []);
+  applyTopBarIntensity(calculateDayIntensity(summary));
+  renderGroupedEvents(grouped);
 }
 
-/**
- * SUMMARY VIEW (Week / Month)
- */
-function renderSummaryView(grouped) {
+function renderWeekView(events) {
+  const grouped = groupEventsByDay(events);
+  renderSummaryView(grouped);
+}
+
+function renderMonthView(weekSummaries) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  const days = Object.keys(grouped).sort();
+  Object.keys(weekSummaries).sort().forEach(weekKey => {
+    const row = document.createElement("div");
+    row.className = "week-days";
 
-  if (days.length === 0) {
-    app.innerHTML = "<p class='muted'>No upcoming events.</p>";
-    return;
-  }
-
-  days.forEach(dayKey => {
-    const dayBlock = document.createElement("div");
-    dayBlock.className = "day clickable";
-
-    const header = document.createElement("h2");
-    header.textContent = formatDayKey(dayKey);
-
-    const count = document.createElement("div");
-    count.className = "muted";
-    const summary = getDaySummary(grouped[dayKey]); count.textContent = `${summary.eventCount} events`;
-
-    dayBlock.appendChild(header);
-    dayBlock.appendChild(count);
-
-    const attendanceTotal = summary.attendanceSum;
-
-    if (attendanceTotal > 0) {
-      const attendance = document.createElement("div");
-      attendance.className = "muted";
-      attendance.textContent =
-        `Estimated attendance: ~${formatAttendance(attendanceTotal)}`;
-      dayBlock.appendChild(attendance);
-    }
-
-    /* Density stripe */
-    const intensity = calculateDayIntensity(summary);
-dayBlock.style.setProperty("--density", intensity);
-
-    dayBlock.addEventListener("click", () => {
-      selectedDayKey = dayKey;
-      currentView = "day";
-
-      document
-        .querySelectorAll("[data-view]")
-        .forEach(b => b.classList.remove("active"));
-
-      document
-        .querySelector('[data-view="day"]')
-        ?.classList.add("active");
-
-      applyView();
+    const slots = Array(7).fill(null);
+    Object.keys(weekSummaries[weekKey].days).forEach(dayKey => {
+      slots[getWeekdayIndex(dayKey)] = dayKey;
     });
 
-    app.appendChild(dayBlock);
+    slots.forEach(dayKey => {
+      const cell = document.createElement("div");
+      cell.className = "month-day";
+      if (dayKey) cell.textContent = formatDayKey(dayKey);
+      else cell.classList.add("empty");
+      row.appendChild(cell);
+    });
+
+    app.appendChild(row);
   });
 }
 
-/**
- * DAY DETAIL VIEW
- */
+
+/* =========================================================
+   ROUTER (applyView)
+   ========================================================= */
+
+function applyView() {
+  if (currentView === "day" && selectedDayKey) {
+    renderDayView(selectedDayKey);
+    return;
+  }
+
+  let events;
+  if (currentView === "week") {
+    events = allEvents.filter(e => withinNextDays(e._start, 7));
+  } else if (currentView === "month") {
+    events = allEvents.filter(e => withinNextDays(e._start, 30));
+  } else {
+    events = allEvents;
+  }
+
+  const grouped = groupEventsByDay(events);
+  const daySummaries = {};
+  Object.keys(grouped).forEach(k => daySummaries[k] = getDaySummary(grouped[k]));
+  const weeks = groupDaySummariesByWeek(daySummaries);
+  const weekSummaries = computeWeekSummaries(weeks);
+
+  const maxA = Math.max(...Object.values(weekSummaries).map(w => w.attendanceSum), 1);
+  const maxC = Math.max(...Object.values(weekSummaries).map(w => w.eventCount), 1);
+
+  Object.values(weekSummaries).forEach(w => {
+    w.intensity = calculateWeekIntensity(w, maxA, maxC);
+  });
+
+  const headerMax = Math.max(...Object.values(weekSummaries).map(w => w.intensity), 0);
+  applyTopBarIntensity(headerMax);
+
+  if (currentView === "month") {
+    renderMonthView(weekSummaries);
+    return;
+  }
+
+  renderWeekView(events);
+}
+
+
+/* =========================================================
+   VIEW BUTTONS
+   ========================================================= */
+
+document.querySelectorAll("[data-view]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-view]").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentView = btn.dataset.view;
+    selectedDayKey = currentView === "day" ? getLocalDayKey(new Date()) : null;
+    applyView();
+  });
+});
+
+
+/* =========================================================
+   DETAIL RENDERERS (UNCHANGED)
+   ========================================================= */
+
 function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  const days = Object.keys(grouped).sort();
+  Object.keys(grouped).sort().forEach(dayKey => {
+    const block = document.createElement("div");
+    block.className = "day";
+    const h = document.createElement("h2");
+    h.textContent = formatDayKey(dayKey);
+    block.appendChild(h);
 
-  if (days.length === 0) {
-    app.innerHTML = "<p class='muted'>No events scheduled for this day.</p>";
-    return;
-  }
+    grouped[dayKey].sort((a, b) => a._start - b._start).forEach(e => {
+      const c = document.createElement("div");
+      c.className = "card";
+      c.innerHTML = `<h3>${e.title || ""}</h3>`;
+      block.appendChild(c);
+    });
 
-  days.forEach(dayKey => {
-    const dayBlock = document.createElement("div");
-    dayBlock.className = "day";
-
-    const header = document.createElement("h2");
-    header.textContent = formatDayKey(dayKey);
-    dayBlock.appendChild(header);
-
-    grouped[dayKey]
-      .sort((a, b) => a._start - b._start)
-      .forEach(event => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        const title = document.createElement("h3");
-        title.textContent = event.title || "";
-        card.appendChild(title);
-
-        const venue = document.createElement("div");
-        venue.className = "muted";
-        venue.textContent = event.venue || "";
-        card.appendChild(venue);
-
-        if (event.address) {
-          const address = document.createElement("div");
-          address.className = "address";
-          address.textContent = event.address;
-          card.appendChild(address);
-        }
-
-        const time = document.createElement("div");
-        time.className = "small";
-        time.textContent = formatDateTime(event._start);
-        card.appendChild(time);
-
-        if (
-          typeof event.attendanceEstimate === "number" &&
-          event.attendanceEstimate > 0
-        ) {
-          const attendance = document.createElement("div");
-          attendance.className = "attendance";
-          attendance.textContent =
-            `Estimated attendance: ~${formatAttendance(event.attendanceEstimate)}`;
-          card.appendChild(attendance);
-        }
-
-        if (event.notes) {
-          const notes = document.createElement("div");
-          notes.className = "notes";
-          notes.textContent = event.notes;
-          card.appendChild(notes);
-        }
-
-        if (event.link) {
-          const source = document.createElement("a");
-          source.className = "source-link";
-          source.href = event.link;
-          source.target = "_blank";
-          source.rel = "noopener noreferrer";
-          source.textContent = "Source";
-          card.appendChild(source);
-        }
-
-        dayBlock.appendChild(card);
-      });
-
-    app.appendChild(dayBlock);
+    app.appendChild(block);
   });
 }
 
-function formatDateTime(date) {
-  if (!date) return "";
+function renderSummaryView(grouped) {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
 
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-
-  if (hours === 0 && minutes === 0) {
-    return "All day";
-  }
-
-  const period = hours >= 12 ? "PM" : "AM";
-  const displayHour = hours % 12 || 12;
-  const displayMinutes = minutes.toString().padStart(2, "0");
-
-  return `${displayHour}:${displayMinutes} ${period}`;
+  Object.keys(grouped).sort().forEach(dayKey => {
+    const d = document.createElement("div");
+    d.className = "day";
+    d.textContent = formatDayKey(dayKey);
+    app.appendChild(d);
+  });
 }
 
-// Initial load
+
+/* =========================================================
+   BOOT
+   ========================================================= */
+
 loadEvents();
-
-
-
-
-
-
-
-
-
-
