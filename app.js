@@ -5,7 +5,7 @@
 let allEvents = [];
 let currentView = "week";
 let selectedDayKey = null;
-
+let weekStartOverride = null; // null = On the Horizon (rolling); Date = calendar week
 
 /* =========================================================
    LOAD EVENTS
@@ -35,10 +35,19 @@ async function loadEvents() {
   }
 }
 
-
 /* =========================================================
    DATE HELPERS
    ========================================================= */
+
+function isDateInCurrentWeek(date) {
+  const today = startOfDay(new Date());
+  const weekStart = startOfDay(today);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  const d = startOfDay(date);
+  return d >= weekStart && d <= weekEnd;
+}
 
 function startOfDay(d) {
   const x = new Date(d);
@@ -169,7 +178,7 @@ function applyTopBarIntensity(intensity) {
 /* ---------- DAY VIEW ---------- */
 
 function renderDayView(dayKey) {
-  const events = allEvents.filter(
+   const events = allEvents.filter(
     e => getLocalDayKey(e._start) === dayKey
   );
 
@@ -187,8 +196,20 @@ function renderDayView(dayKey) {
 function renderWeekView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
+  // Navigation: To Extended Outlook
+  const nav = document.createElement("button");
+  nav.className = "nav-link";
+  nav.textContent = "← To Extended Outlook";
+  nav.addEventListener("click", () => {
+    weekStartOverride = null;
+    currentView = "month";
+    applyView();
+  });
+  app.appendChild(nav);
 
-  const start = startOfDay(new Date());
+  const start = weekStartOverride
+  ? startOfDay(weekStartOverride)
+  : startOfDay(new Date());
   const grouped = groupEventsByDay(allEvents);
 
   let maxIntensity = 0;
@@ -286,6 +307,19 @@ function renderMonthView() {
       } else {
         cell.classList.add("empty");
       }
+        cell.classList.add("clickable");
+        cell.addEventListener("click", () => {
+          if (isDateInCurrentWeek(d)) {
+            // This week stays special (On the Horizon)
+            weekStartOverride = null;
+          } else {
+            // Future weeks are calendar-aligned
+            weekStartOverride = getWeekStartMonday(d);
+          }
+
+          currentView = "week";
+          applyView();
+        });
 
       row.appendChild(cell);
     }
@@ -346,7 +380,15 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 
 function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
-  app.innerHTML = "";
+    const nav = document.createElement("button");
+  nav.className = "nav-link";
+  nav.textContent = "← To On the Horizon";
+  nav.addEventListener("click", () => {
+    weekStartOverride = null;
+    currentView = "week";
+    applyView();
+  });
+  app.appendChild(nav);
 
   Object.keys(grouped).sort().forEach(dayKey => {
     const block = document.createElement("div");
@@ -382,4 +424,5 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
