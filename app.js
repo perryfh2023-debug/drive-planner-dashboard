@@ -206,7 +206,22 @@ function renderGroupedEvents(grouped) {
 
 function formatDateTime(date) {
   if (!date) return "";
-  return date.toLocaleString();
+
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+
+  // If time is exactly midnight, treat as all-day
+  if (hours === 0 && minutes === 0) {
+    return "All day";
+  }
+
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHour = hours % 12 || 12;
+  const displayMinutes = minutes.toString().padStart(2, "0");
+
+  return `${displayHour}:${displayMinutes} ${period}`;
+}
+
 }
 
 document.querySelectorAll("[data-view]").forEach(btn => {
@@ -234,4 +249,5 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 
 // Initial load
 loadEvents();
+
 
