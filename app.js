@@ -124,6 +124,13 @@ function groupEventsByDay(events) {
   }, {});
 }
 
+function totalAttendance(events) {
+  return events.reduce((sum, e) => {
+    const n = Number(e.attendanceEstimate);
+    return Number.isFinite(n) && n > 0 ? sum + n : sum;
+  }, 0);
+}
+
 function getDaySummary(events) {
   const eventCount = events.length;
   const attendanceSum = totalAttendance(events);
@@ -339,3 +346,4 @@ function renderSummaryView(grouped) {
    ========================================================= */
 
 loadEvents();
+
