@@ -55,14 +55,31 @@ function normalizeEvents(events) {
 function buildDateTime(dateStr, timeStr) {
   if (!dateStr) return null;
 
-  const d = new Date(dateStr);
-  if (isNaN(d)) return null;
+  // Parse YYYY-MM-DD as LOCAL date
+  const parts = String(dateStr).split("-");
+  if (parts.length !== 3) return null;
+
+  const year = Number(parts[0]);
+  const monthIndex = Number(parts[1]) - 1; // 0-based
+  const day = Number(parts[2]);
+
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(monthIndex) ||
+    !Number.isFinite(day)
+  ) {
+    return null;
+  }
+
+  const d = new Date(year, monthIndex, day);
 
   if (timeStr) {
     const t = new Date(timeStr);
     if (!isNaN(t)) {
       d.setHours(t.getHours(), t.getMinutes(), 0, 0);
     }
+  } else {
+    d.setHours(0, 0, 0, 0);
   }
 
   return d;
@@ -414,6 +431,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
