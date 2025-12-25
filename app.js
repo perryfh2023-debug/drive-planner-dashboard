@@ -159,8 +159,14 @@ function totalAttendance(events) {
     return Number.isFinite(n) && n > 0 ? sum + n : sum;
   }, 0);
 }
-const maxAttendance = 50000; // soft cap, not shown
+const attendanceTotal = grouped[dayKey].reduce((sum, e) => {
+  const n = Number(e.attendanceEstimate);
+  return Number.isFinite(n) && n > 0 ? sum + n : sum;
+}, 0);
+
+const maxAttendance = 50000;
 const intensity = Math.min(attendanceTotal / maxAttendance, 1);
+
 dayBlock.style.setProperty("--density", intensity);
 
 /**
@@ -387,6 +393,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
