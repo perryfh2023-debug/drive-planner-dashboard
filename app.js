@@ -143,6 +143,16 @@ document.querySelectorAll("[data-view]").forEach(btn => {
   });
 });
 
+function formatAttendance(num) {
+  const n = Number(num);
+  if (!Number.isFinite(n) || n <= 0) return "";
+
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}k`;
+
+  return n.toLocaleString();
+}
+
 /**
  * SUMMARY VIEW (Week / Month)
  */
@@ -353,6 +363,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
