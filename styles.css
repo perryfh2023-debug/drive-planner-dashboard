@@ -30,7 +30,13 @@ body {
   font-weight: 600;
   margin-bottom: 8px;
 }
-
+/* NEW: intensity-driven header shading */
+  background: linear-gradient(
+    to bottom,
+    rgba(47, 111, 237, calc(0.08 + 0.40 * var(--density, 0))),
+    rgba(47, 111, 237, calc(0.02 + 0.20 * var(--density, 0)))
+  );
+}
 /* ================================
    View Tabs
    ================================ */
@@ -236,5 +242,6 @@ main {
 #app {
   padding-top: 12px;
 }
+
 
 
