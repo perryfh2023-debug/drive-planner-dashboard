@@ -225,4 +225,16 @@ main {
   color: #0f172a;
 }
 
+/* ---------- Sticky header fix ---------- */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Ensure content clears the sticky header */
+#app {
+  padding-top: 12px;
+}
+
 
