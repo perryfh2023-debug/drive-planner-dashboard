@@ -192,3 +192,14 @@ main {
   --accent: #3b6fd8;
 }
 
+/* ---------- Header Separation ---------- */
+.top-bar {
+  background: #c3c8d0;          /* darker than canvas */
+  border-bottom: 1px solid #aeb4be;
+}
+
+/* City label slightly stronger */
+.city {
+  color: #0f172a;
+}
+
