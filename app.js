@@ -186,8 +186,7 @@ function applyView() {
       e => getLocalDayKey(e._start) === selectedDayKey
     );
 
-    const grouped = groupEventsByDay(filtered);
-
+    
 // MAX context in day view is just the selected day
 const eventsForDay = grouped[selectedDayKey] || [];
 const daySummary = getDaySummary(eventsForDay);
@@ -568,6 +567,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
