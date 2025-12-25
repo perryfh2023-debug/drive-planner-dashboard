@@ -153,6 +153,13 @@ function formatAttendance(num) {
   return n.toLocaleString();
 }
 
+function totalAttendance(events) {
+  return events.reduce((sum, e) => {
+    const n = Number(e.attendanceEstimate);
+    return Number.isFinite(n) && n > 0 ? sum + n : sum;
+  }, 0);
+}
+
 /**
  * SUMMARY VIEW (Week / Month)
  */
@@ -180,6 +187,20 @@ function renderSummaryView(grouped) {
 
     dayBlock.appendChild(header);
     dayBlock.appendChild(count);
+
+    // Attendance roll-up (optional)
+    const attendanceTotal = grouped[dayKey].reduce((sum, e) => {
+      const n = Number(e.attendanceEstimate);
+      return Number.isFinite(n) && n > 0 ? sum + n : sum;
+    }, 0);
+
+    if (attendanceTotal > 0) {
+      const attendance = document.createElement("div");
+      attendance.className = "muted";
+      attendance.textContent =
+        `Estimated attendance: ~${formatAttendance(attendanceTotal)}`;
+      dayBlock.appendChild(attendance);
+    }
 
     dayBlock.addEventListener("click", () => {
       selectedDayKey = dayKey;
@@ -363,6 +384,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
