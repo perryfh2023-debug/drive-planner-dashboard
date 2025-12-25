@@ -1,5 +1,6 @@
 let allEvents = [];
 let currentView = "default";
+let selectedDayKey = null;
 
 /**
  * Load events from Netlify function
@@ -82,10 +83,9 @@ function groupEventsByDay(events) {
 function applyView() {
   let filtered = [];
 
-  if (currentView === "day") {
-    const today = new Date();
+  if (currentView === "day" && selectedDayKey) {
     filtered = allEvents.filter(e =>
-      e._start.toDateString() === today.toDateString()
+      e._start.toISOString().startsWith(selectedDayKey)
     );
 
     const grouped = groupEventsByDay(filtered);
@@ -116,43 +116,6 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 /**
  * Render grouped events
  */
-function renderGroupedEvents(grouped) {
-  const app = document.getElementById("app");
-  app.innerHTML = "";
-
-  const days = Object.keys(grouped).sort();
-
-  if (days.length === 0) {
-    app.innerHTML = "<p class='muted'>No upcoming events.</p>";
-    return;
-  }
-
-  days.forEach(dayKey => {
-    const dayBlock = document.createElement("div");
-    dayBlock.className = "day";
-
-    const header = document.createElement("h2");
-    header.textContent = new Date(dayKey).toDateString();
-    dayBlock.appendChild(header);
-
-    grouped[dayKey]
-      .sort((a, b) => a._start - b._start)
-      .forEach(event => {
-        const card = document.createElement("div");
-        card.className = "card";
-
-        card.innerHTML =
-          "<h3>" + (event.title || "") + "</h3>" +
-          "<div class='muted'>" + (event.venue || "") + "</div>" +
-          "<div class='small'>" + formatDateTime(event._start) + "</div>";
-
-        dayBlock.appendChild(card);
-      });
-
-    app.appendChild(dayBlock);
-  });
-}
-
 function renderSummaryView(grouped) {
   const app = document.getElementById("app");
   app.innerHTML = "";
@@ -166,7 +129,7 @@ function renderSummaryView(grouped) {
 
   days.forEach(dayKey => {
     const dayBlock = document.createElement("div");
-    dayBlock.className = "day";
+    dayBlock.className = "day clickable";
 
     const header = document.createElement("h2");
     header.textContent = new Date(dayKey).toDateString();
@@ -177,6 +140,24 @@ function renderSummaryView(grouped) {
 
     dayBlock.appendChild(header);
     dayBlock.appendChild(count);
+
+    // ✅ CLICK HANDLER (THIS IS THE NEW PART)
+    dayBlock.addEventListener("click", () => {
+      selectedDayKey = dayKey;
+      currentView = "day";
+
+      document
+        .querySelectorAll("[data-view]")
+        .forEach(b => b.classList.remove("active"));
+
+      document
+        .querySelector('[data-view="day"]')
+        ?.classList.add("active");
+
+      applyView();
+    });
+
+    // ⬇️ THIS STAYS EXACTLY WHERE IT WAS
     app.appendChild(dayBlock);
   });
 }
@@ -188,4 +169,5 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
