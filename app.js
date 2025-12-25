@@ -170,12 +170,15 @@ function calculateDayIntensity(summary) {
     1
   );
 
-  // 60% attendance, 40% event count
   const blended =
     0.6 * attendanceNorm +
     0.4 * countNorm;
 
-  return Math.min(blended, 1);
+  // 🔑 gamma curve to lighten the low end
+  const GAMMA = 1.6; // higher = lighter low end
+  const adjusted = Math.pow(blended, GAMMA);
+
+  return Math.min(adjusted, 1);
 }
 
 /* ---------- Attendance helpers ---------- */
@@ -360,6 +363,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
