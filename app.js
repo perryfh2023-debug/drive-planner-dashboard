@@ -85,6 +85,44 @@ if (!dayKey) return acc;
   }, {});
 }
 
+function getWeekStartMonday(date) {
+  if (!(date instanceof Date) || isNaN(date)) return null;
+
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+
+  const day = d.getDay(); // 0 = Sun, 1 = Mon, ...
+  const diff = day === 0 ? -6 : 1 - day; // move back to Monday
+
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function getWeekKeyMonday(date) {
+  const weekStart = getWeekStartMonday(date);
+  if (!weekStart) return null;
+
+  return getLocalDayKey(weekStart); // reuse YYYY-MM-DD
+}
+
+function groupDaySummariesByWeek(daySummaries) {
+  return Object.entries(daySummaries).reduce((acc, [dayKey, summary]) => {
+    const date = new Date(dayKey);
+    const weekKey = getWeekKeyMonday(date);
+    if (!weekKey) return acc;
+
+    if (!acc[weekKey]) {
+      acc[weekKey] = {
+        weekKey,
+        days: {}
+      };
+    }
+
+    acc[weekKey].days[dayKey] = summary;
+    return acc;
+  }, {});
+}
+
 function withinNextDays(date, days) {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
@@ -117,8 +155,21 @@ function applyView() {
     filtered = allEvents;
   }
 
-  const grouped = groupEventsByDay(filtered);
-  renderSummaryView(grouped);
+ const grouped = groupEventsByDay(filtered);
+
+// Step 4A: build day summaries
+const daySummaries = {};
+Object.keys(grouped).forEach(dayKey => {
+  daySummaries[dayKey] = getDaySummary(grouped[dayKey]);
+});
+
+// Step 4A: group into Monday–Sunday weeks (not rendered yet)
+const weeks = groupDaySummariesByWeek(daySummaries);
+
+// TEMP validation
+console.log("Weeks (Mon–Sun):", weeks);
+
+renderSummaryView(grouped);
 }
 
 /**
@@ -363,6 +414,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
