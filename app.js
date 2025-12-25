@@ -17,7 +17,12 @@ async function loadEvents() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    allEvents = normalized.filter(e => e._start && e._start >= today);
+    const todayKey = getLocalDayKey(today);
+
+allEvents = normalized.filter(e => {
+  if (!e._start) return false;
+  return getLocalDayKey(e._start) >= todayKey;
+});
 
     applyView();
   } catch (err) {
@@ -431,6 +436,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
