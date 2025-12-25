@@ -268,4 +268,20 @@ main {
   color: var(--accent);
 }
 
+/* ---------- Soften overall canvas ---------- */
+body {
+  background: #f2f4f7;
+  color: #1f2933; /* softer than pure black */
+}
+
+/* Keep cards as true surfaces */
+.card {
+  background: #ffffff;
+}
+
+/* Day summary cards sit slightly above canvas */
+.day.clickable {
+  background: #f8fafc;
+}
+
 
