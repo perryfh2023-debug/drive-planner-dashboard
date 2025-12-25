@@ -284,4 +284,24 @@ body {
   background: #f8fafc;
 }
 
+/* ---------- Top bar surface alignment ---------- */
+.top-bar {
+  background: #f2f4f7; /* same as body canvas */
+}
+
+/* Tabs inherit canvas instead of white */
+.views button {
+  background: transparent;
+  color: #1f2933;
+  border: 1px solid #d1d5db;
+}
+
+/* Active tab lifts slightly */
+.views button.active {
+  background: #e6ebf2;
+  color: #1f2933;
+  border-color: #c7d2e3;
+}
+
+
 
