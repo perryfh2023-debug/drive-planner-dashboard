@@ -258,13 +258,31 @@ function renderMonthView() {
     for (let i = 0; i < 7; i++) {
       const d = new Date(cursor);
       d.setDate(cursor.getDate() + i);
-      const key = getLocalDayKey(d);
+      const dayKey = getLocalDayKey(d);
 
       const cell = document.createElement("div");
       cell.className = "month-day";
 
+      // Only render days inside the 30-day window
       if (d >= today && d <= end) {
-        cell.textContent = formatDayKey(key);
+        const events = grouped[dayKey] || [];
+        const summary = getDaySummary(events);
+        const intensity = calculateDayIntensity(summary);
+
+        // Apply shading
+        cell.style.setProperty("--density", intensity);
+
+        // Day label
+        const label = document.createElement("div");
+        label.className = "day-label";
+        label.textContent = d.getDate();
+        cell.appendChild(label);
+
+        // Event count
+        const count = document.createElement("div");
+        count.className = "day-count";
+        count.textContent = summary.eventCount;
+        cell.appendChild(count);
       } else {
         cell.classList.add("empty");
       }
@@ -276,9 +294,9 @@ function renderMonthView() {
     cursor.setDate(cursor.getDate() + 7);
   }
 
+  // Month header uses MAX context intensity (already wired)
   applyTopBarIntensity(0);
 }
-
 
 /* =========================================================
    ROUTER
@@ -364,3 +382,4 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
