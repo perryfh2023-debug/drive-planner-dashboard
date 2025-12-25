@@ -463,16 +463,3 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
-
-
-
-
-
-
-
-
-
-
-
-
-
