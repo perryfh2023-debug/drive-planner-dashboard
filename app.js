@@ -60,31 +60,24 @@ function normalizeEvents(events) {
 function buildDateTime(dateStr, timeStr) {
   if (!dateStr) return null;
 
-  // Parse YYYY-MM-DD as LOCAL date
-  const parts = String(dateStr).split("-");
-  if (parts.length !== 3) return null;
+  let d;
 
-  const year = Number(parts[0]);
-  const monthIndex = Number(parts[1]) - 1; // 0-based
-  const day = Number(parts[2]);
-
-  if (
-    !Number.isFinite(year) ||
-    !Number.isFinite(monthIndex) ||
-    !Number.isFinite(day)
-  ) {
-    return null;
+  // Prefer strict YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    d = new Date(year, month - 1, day);
+  } else {
+    // Fallback: let JS parse it (but normalize to local day)
+    d = new Date(dateStr);
+    if (isNaN(d)) return null;
+    d.setHours(0, 0, 0, 0);
   }
 
-  const d = new Date(year, monthIndex, day);
-
   if (timeStr) {
-    const t = new Date(timeStr);
+    const t = new Date(`1970-01-01T${timeStr}`);
     if (!isNaN(t)) {
       d.setHours(t.getHours(), t.getMinutes(), 0, 0);
     }
-  } else {
-    d.setHours(0, 0, 0, 0);
   }
 
   return d;
@@ -436,6 +429,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
