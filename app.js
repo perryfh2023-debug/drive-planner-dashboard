@@ -179,22 +179,23 @@ function applyView() {
   let filtered = [];
 
   // --------------------
-  // DAY VIEW (unchanged)
+  // DAY VIEW
   // --------------------
   if (currentView === "day" && selectedDayKey) {
     filtered = allEvents.filter(
       e => getLocalDayKey(e._start) === selectedDayKey
     );
 
-    
-// MAX context in day view is just the selected day
-const eventsForDay = grouped[selectedDayKey] || [];
-const daySummary = getDaySummary(eventsForDay);
-applyTopBarIntensity(calculateDayIntensity(daySummary));
+    const dayGrouped = groupEventsByDay(filtered);
 
-renderGroupedEvents(grouped);
-return;
+    // Header intensity = MAX for day context (just that day)
+    const eventsForDay = dayGrouped[selectedDayKey] || [];
+    const daySummary = getDaySummary(eventsForDay);
+    applyTopBarIntensity(calculateDayIntensity(daySummary));
 
+    renderGroupedEvents(dayGrouped);
+    return;
+  }
 
   // --------------------
   // FILTER EVENTS BY VIEW
@@ -250,36 +251,36 @@ return;
       maxWeekEventCount
     );
   });
-// Apply MAX header intensity by view
-if (currentView === "week") {
-  const maxWeek = Math.max(
-    ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
-    0
-  );
-  applyTopBarIntensity(maxWeek);
-}
-
-if (currentView === "month") {
-  const maxMonth = Math.max(
-    ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
-    0
-  );
-  applyTopBarIntensity(maxMonth);
-}
 
   // --------------------
-  // MONTH VIEW (NEW PATH)
+  // APPLY HEADER INTENSITY (MAX by context)
+  // --------------------
+  if (currentView === "week") {
+    const maxWeek = Math.max(
+      ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
+      0
+    );
+    applyTopBarIntensity(maxWeek);
+  } else if (currentView === "month") {
+    const maxMonth = Math.max(
+      ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
+      0
+    );
+    applyTopBarIntensity(maxMonth);
+  } else {
+    applyTopBarIntensity(0);
+  }
+
+  // --------------------
+  // MONTH VIEW
   // --------------------
   if (currentView === "month") {
-    renderMonthView({
-      weeks,
-      weekSummaries
-    });
+    renderMonthView({ weeks, weekSummaries });
     return;
   }
 
   // --------------------
-  // WEEK VIEW (UNCHANGED)
+  // WEEK VIEW (default)
   // --------------------
   renderSummaryView(grouped);
 }
@@ -568,6 +569,7 @@ function formatDateTime(date) {
 // Initial load
 loadEvents();
 }
+
 
 
 
