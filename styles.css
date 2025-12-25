@@ -163,4 +163,39 @@ main {
   text-decoration: underline;
 }
 
+/* Venue address */
+.card .address {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* Attendance line */
+.card .attendance {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #777;
+}
+
+/* Event notes */
+.card .notes {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.3;
+}
+
+/* Source link */
+.card .source-link {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #555;
+  text-decoration: none;
+}
+
+.card .source-link:hover {
+  text-decoration: underline;
+}
+
 
