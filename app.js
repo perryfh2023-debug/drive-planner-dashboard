@@ -1,5 +1,5 @@
 let allEvents = [];
-let currentView = "default";
+let currentView = "week";
 let selectedDayKey = null;
 
 /**
@@ -363,6 +363,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
