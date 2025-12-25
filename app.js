@@ -1,6 +1,9 @@
 let allEvents = [];
 let currentView = "default";
 
+/**
+ * Load events from Netlify function
+ */
 async function loadEvents() {
   try {
     const res = await fetch("/.netlify/functions/events");
@@ -23,7 +26,7 @@ async function loadEvents() {
 }
 
 /**
- * Normalize dates
+ * Normalize raw events into usable Date objects
  */
 function normalizeEvents(events) {
   return events.map(event => {
@@ -63,15 +66,17 @@ function groupEventsByDay(events) {
 
     const dayKey = event._start.toISOString().split("T")[0];
 
-    if (!acc[dayKey]) acc[dayKey] = [];
-    acc[dayKey].push(event);
+    if (!acc[dayKey]) {
+      acc[dayKey] = [];
+    }
 
+    acc[dayKey].push(event);
     return acc;
   }, {});
 }
 
 /**
- * Apply view (future-forward only)
+ * Apply active view (future-forward only)
  */
 function applyView() {
   let filtered = [];
