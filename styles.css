@@ -11,7 +11,7 @@
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #d6d9df; /* soft mid-gray canvas */
+  background: #cfd4db; /* soft mid-gray canvas */
   color: #1f2933;      /* soft charcoal text */
 }
 
@@ -76,7 +76,7 @@ main {
    Summary Day Cards
    ================================ */
 .day.clickable {
-  background: #e1e4ea;
+  background: #dde2e8;
   border-radius: 14px;
   padding: 18px 20px;
   margin-bottom: 18px;
@@ -123,7 +123,7 @@ main {
    Event Cards (NO PURE WHITE)
    ================================ */
 .card {
-  background: #edf0f4; /* light surface, not white */
+  background: #f3f5f8; /* light surface, not white */
   border-radius: 10px;
   padding: 14px 16px;
   margin-top: 12px;
@@ -134,13 +134,13 @@ main {
   margin: 0 0 4px;
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: #0f172a;
 }
 
 /* Venue */
 .card .muted {
   font-size: 0.9rem;
-  color: #4b5563;
+  color: #374151;
 }
 
 /* Address */
@@ -189,5 +189,6 @@ main {
    Accent Variable (Single Hue)
    ================================ */
 :root {
-  --accent: #2f6fed;
+  --accent: #3b6fd8;
 }
+
