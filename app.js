@@ -284,7 +284,6 @@ function renderMonthView() {
       const cell = document.createElement("div");
       cell.className = "month-day";
 
-      // Only render days inside the 30-day window
       if (d >= today && d <= end) {
         const events = grouped[dayKey] || [];
         const summary = getDaySummary(events);
@@ -304,22 +303,22 @@ function renderMonthView() {
         count.className = "day-count";
         count.textContent = summary.eventCount;
         cell.appendChild(count);
-      } else {
-        cell.classList.add("empty");
-      }
+
+        // Click behavior (Month → Week)
         cell.classList.add("clickable");
         cell.addEventListener("click", () => {
           if (isDateInCurrentWeek(d)) {
-            // This week stays special (On the Horizon)
-            weekStartOverride = null;
+            weekStartOverride = null; // this week = On the Horizon
           } else {
-            // Future weeks are calendar-aligned
-            weekStartOverride = getWeekStartMonday(d);
+            weekStartOverride = getWeekStartMonday(d); // future weeks = Mon–Sun
           }
 
           currentView = "week";
           applyView();
         });
+      } else {
+        cell.classList.add("empty");
+      }
 
       row.appendChild(cell);
     }
@@ -328,7 +327,6 @@ function renderMonthView() {
     cursor.setDate(cursor.getDate() + 7);
   }
 
-  // Month header uses MAX context intensity (already wired)
   applyTopBarIntensity(0);
 }
 
@@ -424,5 +422,6 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
