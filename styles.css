@@ -198,4 +198,43 @@ main {
   text-decoration: underline;
 }
 
+/* ---------- Summary Day Cards ---------- */
+.day.clickable {
+  background: #f6f6f6;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+
+/* Make summary days feel intentional */
+.day.clickable h2 {
+  margin-bottom: 6px;
+}
+
+/* ---------- Day View Containers ---------- */
+.day {
+  margin-bottom: 28px;
+}
+
+/* ---------- Event Cards (lighter than summary) ---------- */
+.card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+/* ---------- Secondary Text De-emphasis ---------- */
+.card .address,
+.card .attendance,
+.card .notes,
+.card .muted {
+  color: #777;
+}
+
+/* ---------- Improve Vertical Rhythm ---------- */
+.back-link {
+  margin-bottom: 10px;
+}
+
 
