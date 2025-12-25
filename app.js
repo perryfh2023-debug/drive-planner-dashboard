@@ -14,7 +14,6 @@ async function loadEvents() {
       ? normalizeEvents(data.events)
       : [];
 
-    // FUTURE EVENTS ONLY (date-based, not time-based)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -101,15 +100,10 @@ function applyView() {
     return;
   }
 
-  // Summary views
   if (currentView === "week") {
-    filtered = allEvents.filter(e =>
-      withinNextDays(e._start, 7)
-    );
+    filtered = allEvents.filter(e => withinNextDays(e._start, 7));
   } else if (currentView === "month") {
-    filtered = allEvents.filter(e =>
-      withinNextDays(e._start, 30)
-    );
+    filtered = allEvents.filter(e => withinNextDays(e._start, 30));
   } else {
     filtered = allEvents;
   }
@@ -121,7 +115,6 @@ function applyView() {
 /**
  * Wire view buttons
  */
-
 document.querySelectorAll("[data-view]").forEach(btn => {
   btn.addEventListener("click", () => {
     document
@@ -135,7 +128,7 @@ document.querySelectorAll("[data-view]").forEach(btn => {
       const today = new Date();
       selectedDayKey = today.toISOString().split("T")[0];
     } else {
-      currentView = btn.dataset.view; // "week" or "month"
+      currentView = btn.dataset.view;
       selectedDayKey = null;
     }
 
@@ -143,6 +136,7 @@ document.querySelectorAll("[data-view]").forEach(btn => {
   });
 });
 
+/* ---------- Attendance helpers ---------- */
 function formatAttendance(num) {
   const n = Number(num);
   if (!Number.isFinite(n) || n <= 0) return "";
@@ -159,15 +153,6 @@ function totalAttendance(events) {
     return Number.isFinite(n) && n > 0 ? sum + n : sum;
   }, 0);
 }
-const attendanceTotal = grouped[dayKey].reduce((sum, e) => {
-  const n = Number(e.attendanceEstimate);
-  return Number.isFinite(n) && n > 0 ? sum + n : sum;
-}, 0);
-
-const maxAttendance = 50000;
-const intensity = Math.min(attendanceTotal / maxAttendance, 1);
-
-dayBlock.style.setProperty("--density", intensity);
 
 /**
  * SUMMARY VIEW (Week / Month)
@@ -197,11 +182,7 @@ function renderSummaryView(grouped) {
     dayBlock.appendChild(header);
     dayBlock.appendChild(count);
 
-    // Attendance roll-up (optional)
-    const attendanceTotal = grouped[dayKey].reduce((sum, e) => {
-      const n = Number(e.attendanceEstimate);
-      return Number.isFinite(n) && n > 0 ? sum + n : sum;
-    }, 0);
+    const attendanceTotal = totalAttendance(grouped[dayKey]);
 
     if (attendanceTotal > 0) {
       const attendance = document.createElement("div");
@@ -210,6 +191,11 @@ function renderSummaryView(grouped) {
         `Estimated attendance: ~${formatAttendance(attendanceTotal)}`;
       dayBlock.appendChild(attendance);
     }
+
+    /* Density stripe */
+    const maxAttendance = 50000;
+    const intensity = Math.min(attendanceTotal / maxAttendance, 1);
+    dayBlock.style.setProperty("--density", intensity);
 
     dayBlock.addEventListener("click", () => {
       selectedDayKey = dayKey;
@@ -239,40 +225,8 @@ function renderGroupedEvents(grouped) {
 
   const days = Object.keys(grouped).sort();
 
-  // Empty day
   if (days.length === 0) {
-    const container = document.createElement("div");
-    container.className = "day";
-
-    const back = document.createElement("div");
-    back.className = "back-link";
-    back.textContent = "← Back to Week";
-    back.addEventListener("click", () => {
-      currentView = "week";
-      selectedDayKey = null;
-
-      document
-        .querySelectorAll("[data-view]")
-        .forEach(b => b.classList.remove("active"));
-
-      document
-        .querySelector('[data-view="week"]')
-        ?.classList.add("active");
-
-      applyView();
-    });
-
-    const header = document.createElement("h2");
-    header.textContent = new Date(selectedDayKey).toDateString();
-
-    const empty = document.createElement("p");
-    empty.className = "muted";
-    empty.textContent = "No events scheduled for this day.";
-
-    container.appendChild(back);
-    container.appendChild(header);
-    container.appendChild(empty);
-    app.appendChild(container);
+    app.innerHTML = "<p class='muted'>No events scheduled for this day.</p>";
     return;
   }
 
@@ -280,28 +234,8 @@ function renderGroupedEvents(grouped) {
     const dayBlock = document.createElement("div");
     dayBlock.className = "day";
 
-    const back = document.createElement("div");
-    back.className = "back-link";
-    back.textContent = "← Back to Week";
-    back.addEventListener("click", () => {
-      currentView = "week";
-      selectedDayKey = null;
-
-      document
-        .querySelectorAll("[data-view]")
-        .forEach(b => b.classList.remove("active"));
-
-      document
-        .querySelector('[data-view="week"]')
-        ?.classList.add("active");
-
-      applyView();
-    });
-
     const header = document.createElement("h2");
     header.textContent = new Date(dayKey).toDateString();
-
-    dayBlock.appendChild(back);
     dayBlock.appendChild(header);
 
     grouped[dayKey]
@@ -310,18 +244,15 @@ function renderGroupedEvents(grouped) {
         const card = document.createElement("div");
         card.className = "card";
 
-        // Title
         const title = document.createElement("h3");
         title.textContent = event.title || "";
         card.appendChild(title);
 
-        // Venue
         const venue = document.createElement("div");
         venue.className = "muted";
         venue.textContent = event.venue || "";
         card.appendChild(venue);
 
-        // Address
         if (event.address) {
           const address = document.createElement("div");
           address.className = "address";
@@ -329,13 +260,11 @@ function renderGroupedEvents(grouped) {
           card.appendChild(address);
         }
 
-        // Time
         const time = document.createElement("div");
         time.className = "small";
         time.textContent = formatDateTime(event._start);
         card.appendChild(time);
 
-        // Attendance
         if (
           typeof event.attendanceEstimate === "number" &&
           event.attendanceEstimate > 0
@@ -347,7 +276,6 @@ function renderGroupedEvents(grouped) {
           card.appendChild(attendance);
         }
 
-        // Notes
         if (event.notes) {
           const notes = document.createElement("div");
           notes.className = "notes";
@@ -355,7 +283,6 @@ function renderGroupedEvents(grouped) {
           card.appendChild(notes);
         }
 
-        // Source link
         if (event.link) {
           const source = document.createElement("a");
           source.className = "source-link";
@@ -379,7 +306,6 @@ function formatDateTime(date) {
   const hours = date.getHours();
   const minutes = date.getMinutes();
 
-  // If time is exactly midnight, treat as all-day
   if (hours === 0 && minutes === 0) {
     return "All day";
   }
@@ -393,16 +319,3 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
-
-
-
-
-
-
-
-
-
-
-
-
-
