@@ -199,22 +199,69 @@ function renderGroupedEvents(grouped) {
 
   const days = Object.keys(grouped).sort();
 
+  // Empty day (no events)
   if (days.length === 0) {
-  app.innerHTML = `
-    <div class="day">
-      <h2>${new Date(selectedDayKey).toDateString()}</h2>
-      <p class="muted">No events scheduled for this day.</p>
-    </div>
-  `;
-  return;
-}
+    const container = document.createElement("div");
+    container.className = "day";
+
+    const back = document.createElement("div");
+    back.className = "back-link";
+    back.textContent = "← Back to Week";
+    back.addEventListener("click", () => {
+      currentView = "week";
+      selectedDayKey = null;
+
+      document
+        .querySelectorAll("[data-view]")
+        .forEach(b => b.classList.remove("active"));
+
+      document
+        .querySelector('[data-view="week"]')
+        ?.classList.add("active");
+
+      applyView();
+    });
+
+    const header = document.createElement("h2");
+    header.textContent = new Date(selectedDayKey).toDateString();
+
+    const empty = document.createElement("p");
+    empty.className = "muted";
+    empty.textContent = "No events scheduled for this day.";
+
+    container.appendChild(back);
+    container.appendChild(header);
+    container.appendChild(empty);
+    app.appendChild(container);
+    return;
+  }
 
   days.forEach(dayKey => {
     const dayBlock = document.createElement("div");
     dayBlock.className = "day";
 
+    const back = document.createElement("div");
+    back.className = "back-link";
+    back.textContent = "← Back to Week";
+    back.addEventListener("click", () => {
+      currentView = "week";
+      selectedDayKey = null;
+
+      document
+        .querySelectorAll("[data-view]")
+        .forEach(b => b.classList.remove("active"));
+
+      document
+        .querySelector('[data-view="week"]')
+        ?.classList.add("active");
+
+      applyView();
+    });
+
     const header = document.createElement("h2");
     header.textContent = new Date(dayKey).toDateString();
+
+    dayBlock.appendChild(back);
     dayBlock.appendChild(header);
 
     grouped[dayKey]
@@ -255,6 +302,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
