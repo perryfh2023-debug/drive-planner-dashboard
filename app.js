@@ -169,9 +169,14 @@ function renderGroupedEvents(grouped) {
   const days = Object.keys(grouped).sort();
 
   if (days.length === 0) {
-    app.innerHTML = "<p class='muted'>No events for this day.</p>";
-    return;
-  }
+  app.innerHTML = `
+    <div class="day">
+      <h2>${new Date(selectedDayKey).toDateString()}</h2>
+      <p class="muted">No events scheduled for this day.</p>
+    </div>
+  `;
+  return;
+}
 
   days.forEach(dayKey => {
     const dayBlock = document.createElement("div");
@@ -204,5 +209,29 @@ function formatDateTime(date) {
   return date.toLocaleString();
 }
 
+document.querySelectorAll("[data-view]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document
+      .querySelectorAll("[data-view]")
+      .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    if (btn.dataset.view === "day") {
+      currentView = "day";
+
+      // 👇 Explicitly select TODAY
+      const today = new Date();
+      selectedDayKey = today.toISOString().split("T")[0];
+    } else {
+      currentView = "default";
+      selectedDayKey = null;
+    }
+
+    applyView();
+  });
+});
+
 // Initial load
 loadEvents();
+
