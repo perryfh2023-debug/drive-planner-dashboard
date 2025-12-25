@@ -199,7 +199,7 @@ function renderGroupedEvents(grouped) {
 
   const days = Object.keys(grouped).sort();
 
-  // Empty day (no events)
+  // Empty day
   if (days.length === 0) {
     const container = document.createElement("div");
     container.className = "day";
@@ -270,41 +270,44 @@ function renderGroupedEvents(grouped) {
         const card = document.createElement("div");
         card.className = "card";
 
-        // Event title
+        // Title
         const title = document.createElement("h3");
         title.textContent = event.title || "";
         card.appendChild(title);
 
-        // Venue name
+        // Venue
         const venue = document.createElement("div");
         venue.className = "muted";
         venue.textContent = event.venue || "";
         card.appendChild(venue);
 
-        // Venue address (optional)
-        if (event.venueAddress) {
+        // Address
+        if (event.address) {
           const address = document.createElement("div");
           address.className = "address";
-          address.textContent = event.venueAddress;
+          address.textContent = event.address;
           card.appendChild(address);
         }
 
-        // Start time (no end times yet)
+        // Time
         const time = document.createElement("div");
         time.className = "small";
         time.textContent = formatDateTime(event._start);
         card.appendChild(time);
 
-        // Estimated attendance (optional)
-        if (typeof event.attendance === "number" && event.attendance > 0) {
+        // Attendance
+        if (
+          typeof event.attendanceEstimate === "number" &&
+          event.attendanceEstimate > 0
+        ) {
           const attendance = document.createElement("div");
           attendance.className = "attendance";
           attendance.textContent =
-            `Estimated attendance: ~${formatAttendance(event.attendance)}`;
+            `Estimated attendance: ~${formatAttendance(event.attendanceEstimate)}`;
           card.appendChild(attendance);
         }
 
-        // Notes (optional)
+        // Notes
         if (event.notes) {
           const notes = document.createElement("div");
           notes.className = "notes";
@@ -312,11 +315,11 @@ function renderGroupedEvents(grouped) {
           card.appendChild(notes);
         }
 
-        // Source link (optional)
-        if (event.url) {
+        // Source link
+        if (event.link) {
           const source = document.createElement("a");
           source.className = "source-link";
-          source.href = event.url;
+          source.href = event.link;
           source.target = "_blank";
           source.rel = "noopener noreferrer";
           source.textContent = "Source";
@@ -350,6 +353,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
