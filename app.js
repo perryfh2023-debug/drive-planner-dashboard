@@ -195,6 +195,31 @@ Object.keys(grouped).forEach(dayKey => {
 const weeks = groupDaySummariesByWeek(daySummaries);
 const weekSummaries = computeWeekSummaries(weeks);
 
+// Step 4B.2: compute week baseline intensity (data only)
+
+// Find normalization bounds across visible weeks
+const maxWeekAttendance = Math.max(
+  ...Object.values(weekSummaries).map(w => w.attendanceSum),
+  1
+);
+
+const maxWeekEventCount = Math.max(
+  ...Object.values(weekSummaries).map(w => w.eventCount),
+  1
+);
+
+// Attach baseline intensity to each week summary
+Object.values(weekSummaries).forEach(week => {
+  week.intensity = calculateWeekIntensity(
+    week,
+    maxWeekAttendance,
+    maxWeekEventCount
+  );
+});
+
+// TEMP validation
+console.log("Week summaries w/ intensity:", weekSummaries);
+
 // TEMP validation
 console.log("Week summaries (Mon–Sun):", weekSummaries);
 
@@ -280,6 +305,26 @@ function calculateDayIntensity(summary) {
   const adjusted = Math.pow(blended, GAMMA);
 
   return Math.min(adjusted, 1);
+}
+
+function calculateWeekIntensity(weekSummary, maxAttendance, maxEventCount) {
+  const attendanceNorm = Math.min(
+    weekSummary.attendanceSum / maxAttendance,
+    1
+  );
+
+  const countNorm = Math.min(
+    weekSummary.eventCount / maxEventCount,
+    1
+  );
+
+  const blended =
+    0.6 * attendanceNorm +
+    0.4 * countNorm;
+
+  // Same perceptual curve as days
+  const GAMMA = 1.8;
+  return Math.min(Math.pow(blended, GAMMA), 1);
 }
 
 /* ---------- Attendance helpers ---------- */
@@ -464,4 +509,5 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
