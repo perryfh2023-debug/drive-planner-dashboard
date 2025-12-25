@@ -161,6 +161,17 @@ function withinNextDays(date, days) {
   return date >= start && date < end;
 }
 
+function applyTopBarIntensity(intensity) {
+  const topBar = document.querySelector(".top-bar");
+  if (!topBar) return;
+
+  // louder than body (noticeable shift)
+  const HEADER_GAMMA = 1.2;
+  const adjusted = Math.pow(Math.min(Math.max(intensity, 0), 1), HEADER_GAMMA);
+
+  topBar.style.setProperty("--density", adjusted);
+}
+
 /**
  * Apply active view
  */
@@ -176,9 +187,15 @@ function applyView() {
     );
 
     const grouped = groupEventsByDay(filtered);
-    renderGroupedEvents(grouped);
-    return;
-  }
+
+// MAX context in day view is just the selected day
+const eventsForDay = grouped[selectedDayKey] || [];
+const daySummary = getDaySummary(eventsForDay);
+applyTopBarIntensity(calculateDayIntensity(daySummary));
+
+renderGroupedEvents(grouped);
+return;
+
 
   // --------------------
   // FILTER EVENTS BY VIEW
@@ -234,6 +251,22 @@ function applyView() {
       maxWeekEventCount
     );
   });
+// Apply MAX header intensity by view
+if (currentView === "week") {
+  const maxWeek = Math.max(
+    ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
+    0
+  );
+  applyTopBarIntensity(maxWeek);
+}
+
+if (currentView === "month") {
+  const maxMonth = Math.max(
+    ...Object.values(weekSummaries).map(w => w.intensity ?? 0),
+    0
+  );
+  applyTopBarIntensity(maxMonth);
+}
 
   // --------------------
   // MONTH VIEW (NEW PATH)
@@ -535,6 +568,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
