@@ -222,8 +222,6 @@ function formatDateTime(date) {
   return `${displayHour}:${displayMinutes} ${period}`;
 }
 
-}
-
 document.querySelectorAll("[data-view]").forEach(btn => {
   btn.addEventListener("click", () => {
     document
@@ -249,5 +247,6 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 
 // Initial load
 loadEvents();
+
 
 
