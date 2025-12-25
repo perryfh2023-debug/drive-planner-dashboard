@@ -193,12 +193,12 @@ Object.keys(grouped).forEach(dayKey => {
 
 // Step 4A: group into Monday–Sunday weeks (not rendered yet)
 const weeks = groupDaySummariesByWeek(daySummaries);
+const weekSummaries = computeWeekSummaries(weeks);
 
 // TEMP validation
-console.log("Weeks (Mon–Sun):", weeks);
+console.log("Week summaries (Mon–Sun):", weekSummaries);
 
 renderSummaryView(grouped);
-}
 
 /**
  * Wire view buttons
@@ -233,6 +233,27 @@ function getDaySummary(events) {
     attendanceSum,
     events // keep reference for later use
   };
+}
+
+function computeWeekSummaries(weeks) {
+  return Object.values(weeks).reduce((acc, week) => {
+    let eventCount = 0;
+    let attendanceSum = 0;
+
+    Object.values(week.days).forEach(daySummary => {
+      eventCount += daySummary.eventCount;
+      attendanceSum += daySummary.attendanceSum;
+    });
+
+    acc[week.weekKey] = {
+      weekKey: week.weekKey,
+      eventCount,
+      attendanceSum,
+      days: week.days
+    };
+
+    return acc;
+  }, {});
 }
 
 function calculateDayIntensity(summary) {
@@ -442,6 +463,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
