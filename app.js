@@ -199,6 +199,7 @@ const weekSummaries = computeWeekSummaries(weeks);
 console.log("Week summaries (Mon–Sun):", weekSummaries);
 
 renderSummaryView(grouped);
+}
 
 /**
  * Wire view buttons
@@ -463,3 +464,4 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
