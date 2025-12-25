@@ -75,6 +75,16 @@ function groupEventsByDay(events) {
   }, {});
 }
 
+function withinNextDays(date, days) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + days);
+
+  return date >= start && date < end;
+}
+
 /**
  * Apply active view
  */
@@ -88,17 +98,30 @@ function applyView() {
 
     const grouped = groupEventsByDay(filtered);
     renderGroupedEvents(grouped);
+    return;
+  }
+
+  // Summary views
+  if (currentView === "week") {
+    filtered = allEvents.filter(e =>
+      withinNextDays(e._start, 7)
+    );
+  } else if (currentView === "month") {
+    filtered = allEvents.filter(e =>
+      withinNextDays(e._start, 30)
+    );
   } else {
     filtered = allEvents;
-
-    const grouped = groupEventsByDay(filtered);
-    renderSummaryView(grouped);
   }
+
+  const grouped = groupEventsByDay(filtered);
+  renderSummaryView(grouped);
 }
 
 /**
  * Wire view buttons
  */
+
 document.querySelectorAll("[data-view]").forEach(btn => {
   btn.addEventListener("click", () => {
     document
@@ -106,8 +129,16 @@ document.querySelectorAll("[data-view]").forEach(btn => {
       .forEach(b => b.classList.remove("active"));
 
     btn.classList.add("active");
-    currentView = btn.dataset.view === "day" ? "day" : "default";
-    selectedDayKey = null;
+
+    if (btn.dataset.view === "day") {
+      currentView = "day";
+      const today = new Date();
+      selectedDayKey = today.toISOString().split("T")[0];
+    } else {
+      currentView = btn.dataset.view; // "week" or "month"
+      selectedDayKey = null;
+    }
+
     applyView();
   });
 });
@@ -247,6 +278,7 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 
 // Initial load
 loadEvents();
+
 
 
 
