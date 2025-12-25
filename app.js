@@ -378,6 +378,7 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 
 function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
+   app.innerHTML = "";
     const nav = document.createElement("button");
   nav.className = "nav-link";
   nav.textContent = "← To On the Horizon";
@@ -422,6 +423,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
