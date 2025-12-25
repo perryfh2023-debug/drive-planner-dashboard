@@ -156,6 +156,28 @@ function getDaySummary(events) {
   };
 }
 
+function calculateDayIntensity(summary) {
+  const MAX_ATTENDANCE = 15000;
+  const MAX_EVENT_COUNT = 5;
+
+  const attendanceNorm = Math.min(
+    summary.attendanceSum / MAX_ATTENDANCE,
+    1
+  );
+
+  const countNorm = Math.min(
+    summary.eventCount / MAX_EVENT_COUNT,
+    1
+  );
+
+  // 60% attendance, 40% event count
+  const blended =
+    0.6 * attendanceNorm +
+    0.4 * countNorm;
+
+  return Math.min(blended, 1);
+}
+
 /* ---------- Attendance helpers ---------- */
 function formatAttendance(num) {
   const n = Number(num);
@@ -213,9 +235,8 @@ function renderSummaryView(grouped) {
     }
 
     /* Density stripe */
-    const maxAttendance = 50000;
-    const intensity = Math.min(attendanceTotal / maxAttendance, 1);
-    dayBlock.style.setProperty("--density", intensity);
+    const intensity = calculateDayIntensity(summary);
+dayBlock.style.setProperty("--density", intensity);
 
     dayBlock.addEventListener("click", () => {
       selectedDayKey = dayKey;
@@ -339,5 +360,6 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
