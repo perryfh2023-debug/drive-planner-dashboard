@@ -14,9 +14,11 @@ async function loadEvents() {
       ? normalizeEvents(data.events)
       : [];
 
-    // FUTURE EVENTS ONLY
-    const now = new Date();
-    allEvents = normalized.filter(e => e._start && e._start >= now);
+    // FUTURE EVENTS ONLY (date-based, not time-based)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    allEvents = normalized.filter(e => e._start && e._start >= today);
 
     applyView();
   } catch (err) {
@@ -66,20 +68,16 @@ function groupEventsByDay(events) {
     if (!event._start) return acc;
 
     const dayKey = event._start.toISOString().split("T")[0];
-
-    if (!acc[dayKey]) {
-      acc[dayKey] = [];
-    }
-
+    if (!acc[dayKey]) acc[dayKey] = [];
     acc[dayKey].push(event);
+
     return acc;
   }, {});
 }
 
 /**
- * Apply active view (future-forward only)
+ * Apply active view
  */
-
 function applyView() {
   let filtered = [];
 
@@ -109,12 +107,13 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 
     btn.classList.add("active");
     currentView = btn.dataset.view === "day" ? "day" : "default";
+    selectedDayKey = null;
     applyView();
   });
 });
 
 /**
- * Render grouped events
+ * SUMMARY VIEW (Week / Month)
  */
 function renderSummaryView(grouped) {
   const app = document.getElementById("app");
@@ -141,7 +140,6 @@ function renderSummaryView(grouped) {
     dayBlock.appendChild(header);
     dayBlock.appendChild(count);
 
-    // ✅ CLICK HANDLER (THIS IS THE NEW PART)
     dayBlock.addEventListener("click", () => {
       selectedDayKey = dayKey;
       currentView = "day";
@@ -157,7 +155,46 @@ function renderSummaryView(grouped) {
       applyView();
     });
 
-    // ⬇️ THIS STAYS EXACTLY WHERE IT WAS
+    app.appendChild(dayBlock);
+  });
+}
+
+/**
+ * DAY DETAIL VIEW
+ */
+function renderGroupedEvents(grouped) {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  const days = Object.keys(grouped).sort();
+
+  if (days.length === 0) {
+    app.innerHTML = "<p class='muted'>No events for this day.</p>";
+    return;
+  }
+
+  days.forEach(dayKey => {
+    const dayBlock = document.createElement("div");
+    dayBlock.className = "day";
+
+    const header = document.createElement("h2");
+    header.textContent = new Date(dayKey).toDateString();
+    dayBlock.appendChild(header);
+
+    grouped[dayKey]
+      .sort((a, b) => a._start - b._start)
+      .forEach(event => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML =
+          "<h3>" + (event.title || "") + "</h3>" +
+          "<div class='muted'>" + (event.venue || "") + "</div>" +
+          "<div class='small'>" + formatDateTime(event._start) + "</div>";
+
+        dayBlock.appendChild(card);
+      });
+
     app.appendChild(dayBlock);
   });
 }
@@ -169,5 +206,3 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
-
-
