@@ -27,6 +27,15 @@ async function loadEvents() {
   }
 }
 
+function getLocalDayKey(date) {
+  if (!(date instanceof Date) || isNaN(date)) return null;
+
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 /**
  * Normalize raw events into usable Date objects
  */
@@ -66,7 +75,9 @@ function groupEventsByDay(events) {
   return events.reduce((acc, event) => {
     if (!event._start) return acc;
 
-    const dayKey = event._start.toISOString().split("T")[0];
+    const dayKey = getLocalDayKey(event._start);
+if (!dayKey) return acc;
+
     if (!acc[dayKey]) acc[dayKey] = [];
     acc[dayKey].push(event);
 
@@ -91,9 +102,7 @@ function applyView() {
   let filtered = [];
 
   if (currentView === "day" && selectedDayKey) {
-    filtered = allEvents.filter(e =>
-      e._start.toISOString().startsWith(selectedDayKey)
-    );
+    filtered = allEvents.filter(e => getLocalDayKey(e._start) === selectedDayKey);
 
     const grouped = groupEventsByDay(filtered);
     renderGroupedEvents(grouped);
@@ -126,7 +135,7 @@ document.querySelectorAll("[data-view]").forEach(btn => {
     if (btn.dataset.view === "day") {
       currentView = "day";
       const today = new Date();
-      selectedDayKey = today.toISOString().split("T")[0];
+      selectedDayKey = getLocalDayKey(today);
     } else {
       currentView = btn.dataset.view;
       selectedDayKey = null;
@@ -319,3 +328,4 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
