@@ -1,28 +1,39 @@
+/* ================================
+   Global Reset
+   ================================ */
 * {
   box-sizing: border-box;
 }
 
+/* ================================
+   Base Canvas (NO PURE WHITE)
+   ================================ */
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  background: #f7f7f7;
-  color: #111;
+  background: #d6d9df; /* soft mid-gray canvas */
+  color: #1f2933;      /* soft charcoal text */
 }
 
-/* Top bar */
+/* ================================
+   Top Bar
+   ================================ */
 .top-bar {
   position: sticky;
   top: 0;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
+  background: #d6d9df;
+  border-bottom: 1px solid #b8bcc4;
+  padding: 12px;
 }
 
 .city {
   font-weight: 600;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
+/* ================================
+   View Tabs
+   ================================ */
 .views {
   display: flex;
   gap: 6px;
@@ -31,131 +42,76 @@ body {
 .views button {
   flex: 1;
   padding: 8px;
-  border: 1px solid #ccc;
-  background: #fafafa;
+  border: 1px solid #b8bcc4;
+  background: #d6d9df;
   border-radius: 6px;
   font-size: 14px;
+  color: #1f2933;
+  cursor: pointer;
 }
 
 .views button.active {
-  background: #111;
-  color: #fff;
-  border-color: #111;
+  background: #bfc5cf; /* lifted, not white */
+  border-color: #aab1bd;
+  font-weight: 600;
 }
 
-/* Content */
+/* ================================
+   Main Content
+   ================================ */
 main {
-  padding: 12px;
-}
-
-/* Cards */
-.card {
-  background: #fff;
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 10px;
-  border: 1px solid #e0e0e0;
-}
-
-.card h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-}
-
-.muted {
-  color: #666;
-  font-size: 13px;
-}
-
-.small {
-  font-size: 12px;
-}
-
-/* Day card (week view) */
-.day-card {
-  cursor: pointer;
-}
-
-.day-card:hover {
-  border-color: #bbb;
-}
-
-/* Back link */
-.back {
-  display: inline-block;
-  margin-bottom: 10px;
-  color: #0066cc;
-  cursor: pointer;
-  font-size: 14px;
+  padding: 16px;
 }
 
 /* ================================
-   Day Containers
+   App Container
    ================================ */
-
-.day {
-  margin: 24px 0;
-  padding: 16px 18px 8px;
-  background: #f7f7f7;
-  border-radius: 12px;
-}
-
-/* Day header */
-.day > h2 {
-  margin: 0 0 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #222;
-}
-
-/* ================================
-   Event Cards (inside a day)
-   ================================ */
-
-.day .card {
-  margin: 10px 0;
-  padding: 12px 14px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-}
-
-/* Event title */
-.card h3 {
-  margin: 0 0 4px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111;
-}
-
-/* Venue + muted text */
-.card .muted {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* Time */
-.card .small {
-  margin-top: 4px;
-  font-size: 0.85rem;
-  color: #444;
-}
-
-/* ================================
-   Page Rhythm
-   ================================ */
-
 #app {
   max-width: 720px;
   margin: 0 auto;
-  padding: 12px 16px 48px;
+  padding-bottom: 48px;
 }
 
+/* ================================
+   Summary Day Cards
+   ================================ */
+.day.clickable {
+  background: #e1e4ea;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+  cursor: pointer;
+}
+
+.day.clickable:hover {
+  background: #d9dde5;
+}
+
+.day.clickable h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2f6fed; /* accent */
+}
+
+/* ================================
+   Day View Container
+   ================================ */
+.day {
+  margin-bottom: 28px;
+  padding: 18px 20px;
+  background: #e1e4ea;
+  border-radius: 14px;
+}
+
+/* ================================
+   Back Link
+   ================================ */
 .back-link {
   font-size: 0.9rem;
-  color: #666;
+  color: #4b5563;
   cursor: pointer;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   width: fit-content;
 }
 
@@ -163,25 +119,56 @@ main {
   text-decoration: underline;
 }
 
-/* Venue address */
+/* ================================
+   Event Cards (NO PURE WHITE)
+   ================================ */
+.card {
+  background: #edf0f4; /* light surface, not white */
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 12px;
+}
+
+/* Event Title */
+.card h3 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Venue */
+.card .muted {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+/* Address */
 .card .address {
   margin-top: 2px;
   font-size: 0.85rem;
-  color: #777;
+  color: #6b7280;
 }
 
-/* Attendance line */
+/* Time */
+.card .small {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+/* Attendance */
 .card .attendance {
   margin-top: 6px;
   font-size: 0.85rem;
-  color: #777;
+  color: #6b7280;
 }
 
-/* Event notes */
+/* Notes */
 .card .notes {
   margin-top: 6px;
   font-size: 0.85rem;
-  color: #666;
+  color: #4b5563;
   line-height: 1.3;
 }
 
@@ -190,7 +177,7 @@ main {
   display: inline-block;
   margin-top: 6px;
   font-size: 0.85rem;
-  color: #555;
+  color: #374151;
   text-decoration: none;
 }
 
@@ -198,110 +185,9 @@ main {
   text-decoration: underline;
 }
 
-/* ---------- Summary Day Cards ---------- */
-.day.clickable {
-  background: #f6f6f6;
-  border-radius: 14px;
-  padding: 18px 20px;
-  margin-bottom: 18px;
-}
-
-/* Make summary days feel intentional */
-.day.clickable h2 {
-  margin-bottom: 6px;
-}
-
-/* ---------- Day View Containers ---------- */
-.day {
-  margin-bottom: 28px;
-}
-
-/* ---------- Event Cards (lighter than summary) ---------- */
-.card {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-top: 12px;
-}
-
-/* ---------- Secondary Text De-emphasis ---------- */
-.card .address,
-.card .attendance,
-.card .notes,
-.card .muted {
-  color: #777;
-}
-
-/* ---------- Improve Vertical Rhythm ---------- */
-.back-link {
-  margin-bottom: 10px;
-}
-
-/* Subtle weight for summary day cards */
-.day.clickable {
-  background: hsl(210, 20%, 96%);
-}
-
-/* Slightly heavier when hovered */
-.day.clickable:hover {
-  background: hsl(210, 20%, 93%);
-}
-
-/* When a day has higher density (future hook) */
-.day.clickable.has-density {
-  background: hsl(210, 20%, 92%);
-}
-
-/* ---------- Accent Color ---------- */
+/* ================================
+   Accent Variable (Single Hue)
+   ================================ */
 :root {
-  --accent: #2f6fed; /* calm blue, adjustable */
+  --accent: #2f6fed;
 }
-
-/* Active top view button */
-.views button.active {
-  background: var(--accent);
-  color: #fff;
-}
-
-/* Day header accent in summary view */
-.day.clickable h2 {
-  color: var(--accent);
-}
-
-/* ---------- Soften overall canvas ---------- */
-body {
-  background: #f2f4f7;
-  color: #1f2933; /* softer than pure black */
-}
-
-/* Keep cards as true surfaces */
-.card {
-  background: #ffffff;
-}
-
-/* Day summary cards sit slightly above canvas */
-.day.clickable {
-  background: #f8fafc;
-}
-
-/* ---------- Top bar surface alignment ---------- */
-.top-bar {
-  background: #f2f4f7; /* same as body canvas */
-}
-
-/* Tabs inherit canvas instead of white */
-.views button {
-  background: transparent;
-  color: #1f2933;
-  border: 1px solid #d1d5db;
-}
-
-/* Active tab lifts slightly */
-.views button.active {
-  background: #e6ebf2;
-  color: #1f2933;
-  border-color: #c7d2e3;
-}
-
-
-
