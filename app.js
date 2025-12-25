@@ -60,21 +60,21 @@ function normalizeEvents(events) {
 function buildDateTime(dateStr, timeStr) {
   if (!dateStr) return null;
 
+  // FIXED: local date (this stays)
   let d;
 
-  // Prefer strict YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-    const [year, month, day] = dateStr.split("-").map(Number);
-    d = new Date(year, month - 1, day);
+    const [y, m, day] = dateStr.split("-").map(Number);
+    d = new Date(y, m - 1, day);
   } else {
-    // Fallback: let JS parse it (but normalize to local day)
     d = new Date(dateStr);
     if (isNaN(d)) return null;
     d.setHours(0, 0, 0, 0);
   }
 
+  // RESTORED: tolerant time parsing (this is what you had)
   if (timeStr) {
-    const t = new Date(`1970-01-01T${timeStr}`);
+    const t = new Date(timeStr);
     if (!isNaN(t)) {
       d.setHours(t.getHours(), t.getMinutes(), 0, 0);
     }
@@ -429,6 +429,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
