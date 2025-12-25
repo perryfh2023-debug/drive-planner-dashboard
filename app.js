@@ -175,7 +175,7 @@ function calculateDayIntensity(summary) {
     0.4 * countNorm;
 
   // 🔑 gamma curve to lighten the low end
-  const GAMMA = 1.6; // higher = lighter low end
+  const GAMMA = 1.8; // higher = lighter low end
   const adjusted = Math.pow(blended, GAMMA);
 
   return Math.min(adjusted, 1);
@@ -363,6 +363,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
