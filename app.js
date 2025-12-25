@@ -274,10 +274,49 @@ function applyView() {
   // --------------------
   // MONTH VIEW
   // --------------------
+
+  function getWeekdayIndex(dayKey) {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const jsDay = date.getDay(); // 0=Sun ... 6=Sat
+  return jsDay === 0 ? 6 : jsDay - 1; // Mon=0 ... Sun=6
+}
+  
   if (currentView === "month") {
-    renderMonthView({ weeks, weekSummaries });
-    return;
-  }
+const weekKeys = Object.keys(weekSummaries).sort();
+
+weekKeys.forEach(weekKey => {
+  const weekEl = document.createElement("div");
+  weekEl.className = "month-week";
+
+  const daysRow = document.createElement("div");
+  daysRow.className = "week-days";
+
+  // 7 fixed slots (Mon–Sun)
+  const slots = Array(7).fill(null);
+
+  Object.keys(weekSummaries[weekKey].days).forEach(dayKey => {
+    const idx = getWeekdayIndex(dayKey);
+    slots[idx] = dayKey;
+  });
+
+  // Render all 7 slots
+  slots.forEach(dayKey => {
+    const cell = document.createElement("div");
+    cell.className = "month-day";
+
+    if (dayKey) {
+      cell.textContent = formatDayKey(dayKey);
+    } else {
+      cell.classList.add("empty");
+    }
+
+    daysRow.appendChild(cell);
+  });
+
+  weekEl.appendChild(daysRow);
+  app.appendChild(weekEl);
+});
 
   // --------------------
   // WEEK VIEW (default)
@@ -568,6 +607,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
