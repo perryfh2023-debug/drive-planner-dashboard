@@ -167,14 +167,22 @@ function withinNextDays(date, days) {
 function applyView() {
   let filtered = [];
 
+  // --------------------
+  // DAY VIEW (unchanged)
+  // --------------------
   if (currentView === "day" && selectedDayKey) {
-    filtered = allEvents.filter(e => getLocalDayKey(e._start) === selectedDayKey);
+    filtered = allEvents.filter(
+      e => getLocalDayKey(e._start) === selectedDayKey
+    );
 
     const grouped = groupEventsByDay(filtered);
     renderGroupedEvents(grouped);
     return;
   }
 
+  // --------------------
+  // FILTER EVENTS BY VIEW
+  // --------------------
   if (currentView === "week") {
     filtered = allEvents.filter(e => withinNextDays(e._start, 7));
   } else if (currentView === "month") {
@@ -183,47 +191,65 @@ function applyView() {
     filtered = allEvents;
   }
 
- const grouped = groupEventsByDay(filtered);
+  // --------------------
+  // DAY GROUPING
+  // --------------------
+  const grouped = groupEventsByDay(filtered);
 
-// Step 4A: build day summaries
-const daySummaries = {};
-Object.keys(grouped).forEach(dayKey => {
-  daySummaries[dayKey] = getDaySummary(grouped[dayKey]);
-});
+  // --------------------
+  // DAY SUMMARIES
+  // --------------------
+  const daySummaries = {};
+  Object.keys(grouped).forEach(dayKey => {
+    daySummaries[dayKey] = getDaySummary(grouped[dayKey]);
+  });
 
-// Step 4A: group into Monday–Sunday weeks (not rendered yet)
-const weeks = groupDaySummariesByWeek(daySummaries);
-const weekSummaries = computeWeekSummaries(weeks);
+  // --------------------
+  // WEEK GROUPING (Mon–Sun)
+  // --------------------
+  const weeks = groupDaySummariesByWeek(daySummaries);
 
-// Step 4B.2: compute week baseline intensity (data only)
+  // --------------------
+  // WEEK SUMMARIES
+  // --------------------
+  const weekSummaries = computeWeekSummaries(weeks);
 
-// Find normalization bounds across visible weeks
-const maxWeekAttendance = Math.max(
-  ...Object.values(weekSummaries).map(w => w.attendanceSum),
-  1
-);
-
-const maxWeekEventCount = Math.max(
-  ...Object.values(weekSummaries).map(w => w.eventCount),
-  1
-);
-
-// Attach baseline intensity to each week summary
-Object.values(weekSummaries).forEach(week => {
-  week.intensity = calculateWeekIntensity(
-    week,
-    maxWeekAttendance,
-    maxWeekEventCount
+  // --------------------
+  // WEEK BASELINE INTENSITY (DATA ONLY)
+  // --------------------
+  const maxWeekAttendance = Math.max(
+    ...Object.values(weekSummaries).map(w => w.attendanceSum),
+    1
   );
-});
 
-// TEMP validation
-console.log("Week summaries w/ intensity:", weekSummaries);
+  const maxWeekEventCount = Math.max(
+    ...Object.values(weekSummaries).map(w => w.eventCount),
+    1
+  );
 
-// TEMP validation
-console.log("Week summaries (Mon–Sun):", weekSummaries);
+  Object.values(weekSummaries).forEach(week => {
+    week.intensity = calculateWeekIntensity(
+      week,
+      maxWeekAttendance,
+      maxWeekEventCount
+    );
+  });
 
-renderSummaryView(grouped);
+  // --------------------
+  // MONTH VIEW (NEW PATH)
+  // --------------------
+  if (currentView === "month") {
+    renderMonthView({
+      weeks,
+      weekSummaries
+    });
+    return;
+  }
+
+  // --------------------
+  // WEEK VIEW (UNCHANGED)
+  // --------------------
+  renderSummaryView(grouped);
 }
 
 /**
@@ -509,5 +535,6 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
