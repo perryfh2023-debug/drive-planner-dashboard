@@ -252,4 +252,20 @@ main {
   background: hsl(210, 20%, 92%);
 }
 
+/* ---------- Accent Color ---------- */
+:root {
+  --accent: #2f6fed; /* calm blue, adjustable */
+}
+
+/* Active top view button */
+.views button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* Day header accent in summary view */
+.day.clickable h2 {
+  color: var(--accent);
+}
+
 
