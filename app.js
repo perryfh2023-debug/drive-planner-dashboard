@@ -284,7 +284,7 @@ function renderSummaryView(grouped) {
     dayBlock.className = "day clickable";
 
     const header = document.createElement("h2");
-    header.textContent = new Date(dayKey).toDateString();
+    header.textContent = dayKey;
 
     const count = document.createElement("div");
     count.className = "muted";
@@ -345,7 +345,7 @@ function renderGroupedEvents(grouped) {
     dayBlock.className = "day";
 
     const header = document.createElement("h2");
-    header.textContent = new Date(dayKey).toDateString();
+    header.textContent = dayKey;
     dayBlock.appendChild(header);
 
     grouped[dayKey]
@@ -429,6 +429,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
