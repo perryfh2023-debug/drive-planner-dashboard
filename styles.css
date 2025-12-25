@@ -243,5 +243,14 @@ main {
   padding-top: 12px;
 }
 
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.month-day.empty {
+  visibility: hidden;
+}
+
 
 
