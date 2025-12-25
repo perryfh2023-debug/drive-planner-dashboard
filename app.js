@@ -41,6 +41,19 @@ function getLocalDayKey(date) {
   return `${y}-${m}-${d}`;
 }
 
+function formatDayKey(dayKey) {
+  const [y, m, d] = dayKey.split("-").map(Number);
+
+  // Construct local date explicitly (no UTC parsing)
+  const date = new Date(y, m - 1, d);
+
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric"
+  });
+}
+
 /**
  * Normalize raw events into usable Date objects
  */
@@ -284,7 +297,7 @@ function renderSummaryView(grouped) {
     dayBlock.className = "day clickable";
 
     const header = document.createElement("h2");
-    header.textContent = dayKey;
+    header.textContent = formatDayKey(dayKey);
 
     const count = document.createElement("div");
     count.className = "muted";
@@ -345,7 +358,7 @@ function renderGroupedEvents(grouped) {
     dayBlock.className = "day";
 
     const header = document.createElement("h2");
-    header.textContent = dayKey;
+    header.textContent = formatDayKey(dayKey);
     dayBlock.appendChild(header);
 
     grouped[dayKey]
@@ -429,6 +442,7 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
 
 
 
