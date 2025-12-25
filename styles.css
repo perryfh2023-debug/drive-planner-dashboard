@@ -237,4 +237,19 @@ main {
   margin-bottom: 10px;
 }
 
+/* Subtle weight for summary day cards */
+.day.clickable {
+  background: hsl(210, 20%, 96%);
+}
+
+/* Slightly heavier when hovered */
+.day.clickable:hover {
+  background: hsl(210, 20%, 93%);
+}
+
+/* When a day has higher density (future hook) */
+.day.clickable.has-density {
+  background: hsl(210, 20%, 92%);
+}
+
 
