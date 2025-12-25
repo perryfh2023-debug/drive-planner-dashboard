@@ -78,6 +78,7 @@ function groupEventsByDay(events) {
 /**
  * Apply active view (future-forward only)
  */
+
 function applyView() {
   let filtered = [];
 
@@ -86,12 +87,15 @@ function applyView() {
     filtered = allEvents.filter(e =>
       e._start.toDateString() === today.toDateString()
     );
+
+    const grouped = groupEventsByDay(filtered);
+    renderGroupedEvents(grouped);
   } else {
     filtered = allEvents;
-  }
 
-  const grouped = groupEventsByDay(filtered);
-  renderGroupedEvents(grouped);
+    const grouped = groupEventsByDay(filtered);
+    renderSummaryView(grouped);
+  }
 }
 
 /**
@@ -149,6 +153,34 @@ function renderGroupedEvents(grouped) {
   });
 }
 
+function renderSummaryView(grouped) {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  const days = Object.keys(grouped).sort();
+
+  if (days.length === 0) {
+    app.innerHTML = "<p class='muted'>No upcoming events.</p>";
+    return;
+  }
+
+  days.forEach(dayKey => {
+    const dayBlock = document.createElement("div");
+    dayBlock.className = "day";
+
+    const header = document.createElement("h2");
+    header.textContent = new Date(dayKey).toDateString();
+
+    const count = document.createElement("div");
+    count.className = "muted";
+    count.textContent = `${grouped[dayKey].length} events`;
+
+    dayBlock.appendChild(header);
+    dayBlock.appendChild(count);
+    app.appendChild(dayBlock);
+  });
+}
+
 function formatDateTime(date) {
   if (!date) return "";
   return date.toLocaleString();
@@ -156,3 +188,4 @@ function formatDateTime(date) {
 
 // Initial load
 loadEvents();
+
