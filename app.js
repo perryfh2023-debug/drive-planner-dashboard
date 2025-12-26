@@ -422,6 +422,31 @@ function renderGroupedEvents(grouped) {
     });
     c.appendChild(time);
   }
+// Venue
+if (e.venue) {
+  const venue = document.createElement("div");
+  venue.className = "muted";
+  venue.textContent = e.venue;
+  c.appendChild(venue);
+}
+// Attendance
+if (Number.isFinite(Number(e.attendanceEstimate))) {
+  const attendance = document.createElement("div");
+  attendance.className = "muted";
+  attendance.textContent =
+    `Estimated attendance: ~${formatAttendance(e.attendanceEstimate)}`;
+  c.appendChild(attendance);
+}
+// View event link
+if (e.source) {
+  const link = document.createElement("a");
+  link.href = e.source;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.className = "muted";
+  link.textContent = "View event";
+  c.appendChild(link);
+}
 
   block.appendChild(c);
 });
@@ -437,4 +462,5 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
