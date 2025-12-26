@@ -326,6 +326,11 @@ function renderMonthView() {
   applyTopBarIntensity(0);
 }
 
+function syncTopNav() {
+  document.querySelectorAll("[data-view]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === currentView);
+  });
+}
 
 /* =========================================================
    ROUTER
@@ -495,6 +500,7 @@ block.appendChild(disclaimer);
    ========================================================= */
 
 loadEvents();
+
 
 
 
