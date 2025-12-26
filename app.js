@@ -397,12 +397,17 @@ function renderGroupedEvents(grouped) {
     h.textContent = formatDayKey(dayKey);
     block.appendChild(h);
 
-    if (grouped[dayKey].length === 0) {
-      const msg = document.createElement("div");
-      msg.className = "muted";
-      msg.textContent = "No events scheduled.";
-      block.appendChild(msg);
-    } else {
+   if (grouped[dayKey].length === 0) {
+  const msg = document.createElement("div");
+  msg.className = "muted";
+  msg.textContent = "No event data available for today.";
+  block.appendChild(msg);
+
+  const sub = document.createElement("div");
+  sub.className = "muted";
+  sub.textContent = "Check upcoming days for activity.";
+  block.appendChild(sub);
+} else {
       grouped[dayKey]
         .sort((a, b) => a._start - b._start)
         .forEach(e => {
@@ -475,6 +480,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
