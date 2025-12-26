@@ -536,6 +536,18 @@ if (selectedDayKey && !grouped[selectedDayKey]) {
             c.appendChild(link);
           }
 
+          // Notes
+if (e.notes && String(e.notes).trim()) {
+  const notes = document.createElement("div");
+  notes.className = "muted";
+  notes.textContent = e.notes;
+  notes.style.marginTop = "6px";
+  notes.style.padding = "6px 8px";
+  notes.style.borderRadius = "6px";
+  notes.style.background = "#eef1f5";
+  c.appendChild(notes);
+}
+ 
           block.appendChild(c);
         });
     }
@@ -557,6 +569,7 @@ block.appendChild(disclaimer);
    ========================================================= */
 
 loadEvents();
+
 
 
 
