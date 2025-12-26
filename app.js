@@ -270,6 +270,31 @@ function renderMonthView() {
   end.setDate(today.getDate() + 29);
 
   const grouped = groupEventsByDay(allEvents);
+
+  /* ---------- Header ---------- */
+  const header = document.createElement("div");
+  header.className = "muted";
+  header.textContent = "Next 30 days";
+  header.style.marginBottom = "6px";
+  app.appendChild(header);
+
+  /* ---------- Weekday Headers ---------- */
+  const weekdayRow = document.createElement("div");
+  weekdayRow.className = "week-days";
+  weekdayRow.style.marginBottom = "4px";
+
+  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(d => {
+    const wd = document.createElement("div");
+    wd.className = "muted";
+    wd.style.fontSize = "0.7rem";
+    wd.style.textAlign = "center";
+    wd.textContent = d;
+    weekdayRow.appendChild(wd);
+  });
+
+  app.appendChild(weekdayRow);
+
+  /* ---------- Calendar Grid ---------- */
   let cursor = getWeekStartMonday(today);
 
   while (cursor <= end) {
@@ -291,15 +316,32 @@ function renderMonthView() {
 
         cell.style.setProperty("--density", intensity);
 
-        const label = document.createElement("div");
-        label.className = "day-label";
-        label.textContent = d.getDate();
-        cell.appendChild(label);
+        /* ----- Day Anchor ----- */
+        const dateLabel = document.createElement("div");
+        dateLabel.style.fontWeight = "600";
+        dateLabel.style.fontSize = "0.8rem";
+        dateLabel.textContent = d.toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric"
+        });
+        cell.appendChild(dateLabel);
 
-        const count = document.createElement("div");
-        count.className = "day-count";
-        count.textContent = summary.eventCount;
-        cell.appendChild(count);
+        /* ----- Metrics ----- */
+        if (summary.eventCount > 0) {
+          const ec = document.createElement("div");
+          ec.className = "muted";
+          ec.style.fontSize = "0.7rem";
+          ec.textContent = `ec ${summary.eventCount}`;
+          cell.appendChild(ec);
+        }
+
+        if (summary.attendanceSum > 0) {
+          const ae = document.createElement("div");
+          ae.className = "muted";
+          ae.style.fontSize = "0.7rem";
+          ae.textContent = `ae ~${formatAttendance(summary.attendanceSum)}`;
+          cell.appendChild(ae);
+        }
 
         cell.classList.add("clickable");
         cell.addEventListener("click", () => {
@@ -308,7 +350,6 @@ function renderMonthView() {
           } else {
             weekStartOverride = getWeekStartMonday(d);
           }
-
           currentView = "week";
           applyView();
         });
@@ -323,8 +364,17 @@ function renderMonthView() {
     cursor.setDate(cursor.getDate() + 7);
   }
 
+  /* ---------- Legend ---------- */
+  const legend = document.createElement("div");
+  legend.className = "muted";
+  legend.style.fontSize = "0.7rem";
+  legend.style.marginTop = "8px";
+  legend.textContent = "ec = event count • ae = estimated attendance";
+  app.appendChild(legend);
+
   applyTopBarIntensity(0);
 }
+
 
 function syncTopNav() {
   document.querySelectorAll("[data-view]").forEach(btn => {
@@ -504,6 +554,7 @@ block.appendChild(disclaimer);
    ========================================================= */
 
 loadEvents();
+
 
 
 
