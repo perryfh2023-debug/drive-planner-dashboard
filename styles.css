@@ -281,6 +281,23 @@ body {
   text-align: center;
 }
 
+/* Make every week-row grid (and the weekday header grid) use stable tracks */
+.week-days {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+/* Allow grid items to shrink instead of enforcing min-content width */
+.month-day,
+.weekday {
+  min-width: 0;
+}
+
+/* Optional: prevent nowrap text from visually spilling */
+.month-day .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* =========================================================
    CLICKABLE AFFORDANCES
    ========================================================= */
@@ -592,6 +609,7 @@ body {
 .day.clickable {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
+
 
 
 
