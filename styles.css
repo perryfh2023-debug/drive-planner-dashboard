@@ -370,3 +370,31 @@ body {
   --accent: #eab308; /* yellow */
 }
 
+/* =========================================================
+   DAY VIEW – BRIGHTNESS & EYE STRAIN FIX
+   ========================================================= */
+
+/* Day view background */
+.day {
+  background: #eef2f6;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+
+/* Event card base (slightly darker than before) */
+.card {
+  background: #f1f5f9;
+}
+
+/* Notes callout – darker and calmer */
+.card div[style*="background"] {
+  background: #e5ebf3;
+  color: #374151;
+}
+
+/* Divider tone softened */
+.card div[style*="height: 1px"] {
+  background: #d1d9e6;
+}
+
