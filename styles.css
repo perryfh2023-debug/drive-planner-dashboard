@@ -509,7 +509,7 @@ body {
 
 /* Treat day blocks as sections, not cards */
 .day {
-  margin-bottom: 18px;     /* more space between days */
+  margin-bottom: 12px;     /* more space between days */
   background: #edf1f5;     /* slightly darker, calmer */
 }
 
@@ -528,6 +528,7 @@ body {
 .day > .muted {
   line-height: 1.3;
 }
+
 
 
 
