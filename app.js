@@ -232,74 +232,10 @@ function renderWeekView() {
     h.textContent = formatDayKey(key);
     block.appendChild(h);
 
-    const c = document.createElement("div");
+ const c = document.createElement("div");
 c.className = "card";
-
-// Title
-const title = document.createElement("h3");
-c.appendChild(title);
-
-// Time
-if (e._start) {
-  const time = document.createElement("div");
-  time.className = "muted";
-  time.textContent = e._start.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit"
-  });
-  c.appendChild(time);
-}
-
-// Venue
-if (e.venue) {
-  const venue = document.createElement("div");
-  venue.className = "muted";
-  venue.textContent = e.venue;
-  c.appendChild(venue);
-}
-
-// Attendance
-if (Number.isFinite(Number(e.attendanceEstimate))) {
-  const attendance = document.createElement("div");
-  attendance.className = "muted";
-  attendance.textContent =
-    `Estimated attendance: ~${formatAttendance(e.attendanceEstimate)}`;
-  c.appendChild(attendance);
-}
-
-// View Event link
-if (e.source) {
-  const link = document.createElement("a");
-  link.href = e.source;
-  link.target = "_blank";
-  link.rel = "noopener";
-  link.className = "muted";
-  link.textContent = "View event";
-  c.appendChild(link);
-}
-
+c.innerHTML = `<h3>${e.title || ""}</h3>`;
 block.appendChild(c);
-
-    if (summary.attendanceSum > 0) {
-      const a = document.createElement("div");
-      a.className = "muted";
-      a.textContent =
-        `Estimated attendance: ~${formatAttendance(summary.attendanceSum)}`;
-      block.appendChild(a);
-    }
-
-    block.addEventListener("click", () => {
-      selectedDayKey = key;
-      currentView = "day";
-      applyView();
-    });
-
-    app.appendChild(block);
-  }
-
-  applyTopBarIntensity(maxIntensity);
-}
-
 
 /* ---------- MONTH VIEW (STRUCTURE ONLY) ---------- */
 
@@ -466,6 +402,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
