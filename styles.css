@@ -567,6 +567,16 @@ body {
   white-space: nowrap;
 }
 
+/* =========================================================
+   MOBILE CLICK AFFORDANCE – DAY CHIPS
+   ========================================================= */
+
+/* Month + Week clickable days */
+.month-day.clickable,
+.day.clickable {
+  border: 1px solid rgba(15, 23, 42, 0.18);
+}
+
 
 
 
