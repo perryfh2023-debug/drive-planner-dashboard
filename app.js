@@ -7,6 +7,7 @@ let currentView = "week";
 let selectedDayKey = null;
 let weekStartOverride = null; // null = On the Horizon (rolling); Date = calendar week
 
+
 /* =========================================================
    LOAD EVENTS
    ========================================================= */
@@ -34,6 +35,7 @@ async function loadEvents() {
       "<p class='muted'>Failed to load events.</p>";
   }
 }
+
 
 /* =========================================================
    DATE HELPERS
@@ -178,7 +180,7 @@ function applyTopBarIntensity(intensity) {
 /* ---------- DAY VIEW ---------- */
 
 function renderDayView(dayKey) {
-   const events = allEvents.filter(
+  const events = allEvents.filter(
     e => getLocalDayKey(e._start) === dayKey
   );
 
@@ -186,17 +188,16 @@ function renderDayView(dayKey) {
   const summary = getDaySummary(grouped[dayKey] || []);
 
   applyTopBarIntensity(calculateDayIntensity(summary));
-
   renderGroupedEvents(grouped);
 }
 
 
-/* ---------- WEEK VIEW (ROLLING) ---------- */
+/* ---------- WEEK VIEW ---------- */
 
 function renderWeekView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
-  // Navigation: To Extended Outlook
+
   const nav = document.createElement("button");
   nav.className = "nav-link";
   nav.textContent = "← To Extended Outlook";
@@ -208,10 +209,10 @@ function renderWeekView() {
   app.appendChild(nav);
 
   const start = weekStartOverride
-  ? startOfDay(weekStartOverride)
-  : startOfDay(new Date());
-  const grouped = groupEventsByDay(allEvents);
+    ? startOfDay(weekStartOverride)
+    : startOfDay(new Date());
 
+  const grouped = groupEventsByDay(allEvents);
   let maxIntensity = 0;
 
   for (let i = 0; i < 7; i++) {
@@ -232,12 +233,33 @@ function renderWeekView() {
     h.textContent = formatDayKey(key);
     block.appendChild(h);
 
- const c = document.createElement("div");
-c.className = "card";
-c.innerHTML = `<h3>${e.title || ""}</h3>`;
-block.appendChild(c);
+    const c = document.createElement("div");
+    c.className = "muted";
+    c.textContent = `${summary.eventCount} events`;
+    block.appendChild(c);
 
-/* ---------- MONTH VIEW (STRUCTURE ONLY) ---------- */
+    if (summary.attendanceSum > 0) {
+      const a = document.createElement("div");
+      a.className = "muted";
+      a.textContent =
+        `Estimated attendance: ~${formatAttendance(summary.attendanceSum)}`;
+      block.appendChild(a);
+    }
+
+    block.addEventListener("click", () => {
+      selectedDayKey = key;
+      currentView = "day";
+      applyView();
+    });
+
+    app.appendChild(block);
+  }
+
+  applyTopBarIntensity(maxIntensity);
+}
+
+
+/* ---------- MONTH VIEW ---------- */
 
 function renderMonthView() {
   const app = document.getElementById("app");
@@ -248,7 +270,6 @@ function renderMonthView() {
   end.setDate(today.getDate() + 29);
 
   const grouped = groupEventsByDay(allEvents);
-
   let cursor = getWeekStartMonday(today);
 
   while (cursor <= end) {
@@ -268,28 +289,24 @@ function renderMonthView() {
         const summary = getDaySummary(events);
         const intensity = calculateDayIntensity(summary);
 
-        // Apply shading
         cell.style.setProperty("--density", intensity);
 
-        // Day label
         const label = document.createElement("div");
         label.className = "day-label";
         label.textContent = d.getDate();
         cell.appendChild(label);
 
-        // Event count
         const count = document.createElement("div");
         count.className = "day-count";
         count.textContent = summary.eventCount;
         cell.appendChild(count);
 
-        // Click behavior (Month → Week)
         cell.classList.add("clickable");
         cell.addEventListener("click", () => {
           if (isDateInCurrentWeek(d)) {
-            weekStartOverride = null; // this week = On the Horizon
+            weekStartOverride = null;
           } else {
-            weekStartOverride = getWeekStartMonday(d); // future weeks = Mon–Sun
+            weekStartOverride = getWeekStartMonday(d);
           }
 
           currentView = "week";
@@ -308,6 +325,7 @@ function renderMonthView() {
 
   applyTopBarIntensity(0);
 }
+
 
 /* =========================================================
    ROUTER
@@ -357,8 +375,9 @@ document.querySelectorAll("[data-view]").forEach(btn => {
 
 function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
-   app.innerHTML = "";
-    const nav = document.createElement("button");
+  app.innerHTML = "";
+
+  const nav = document.createElement("button");
   nav.className = "nav-link";
   nav.textContent = "← To On the Horizon";
   nav.addEventListener("click", () => {
@@ -402,14 +421,3 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
-  
-        
-
-
-
-
-
-
-
-
-
