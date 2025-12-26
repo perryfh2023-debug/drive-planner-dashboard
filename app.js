@@ -437,20 +437,25 @@ if (Number.isFinite(Number(e.attendanceEstimate))) {
     `Estimated attendance: ~${formatAttendance(e.attendanceEstimate)}`;
   c.appendChild(attendance);
 }
+           
 // View event link
-if (e.source) {
+if (e.link) {
   const link = document.createElement("a");
-  link.href = e.source;
+  link.href = e.link;
   link.target = "_blank";
   link.rel = "noopener";
   link.className = "muted";
   link.textContent = "View event";
   c.appendChild(link);
 }
-
-  block.appendChild(c);
-});
-    }
+     
+// Venue address
+if (e.address) {
+  const address = document.createElement("div");
+  address.className = "muted";
+  address.textContent = e.address;
+  c.appendChild(address);
+}
 
     app.appendChild(block);
   });
@@ -462,5 +467,6 @@ if (e.source) {
    ========================================================= */
 
 loadEvents();
+
 
 
