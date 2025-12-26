@@ -306,8 +306,8 @@ body {
   bottom: 10px;
   width: 4px;
   border-radius: 4px;
-  background: #3b82f6; /* accent hue */
-  opacity: 0.25;
+  background: var(--accent);
+  opacity: 0.35;
 }
 
 /* Event title prominence */
@@ -333,5 +333,40 @@ body {
 /* Improve spacing between grouped sections */
 .card > div {
   margin-top: 2px;
+}
+
+/* =========================================
+   CATEGORY COLOR SYSTEM
+   ========================================= */
+
+/* Default (fallback) */
+.card {
+  --accent: #3b82f6; /* blue */
+}
+
+/* Category label color */
+.card .muted:first-child {
+  color: var(--accent);
+}
+
+/* Category-specific accents */
+.card[data-category="CONCERTS"] {
+  --accent: #8b5cf6; /* purple */
+}
+
+.card[data-category="SPORTS"] {
+  --accent: #22c55e; /* green */
+}
+
+.card[data-category="FESTIVALS"] {
+  --accent: #f97316; /* orange */
+}
+
+.card[data-category="THEATER"] {
+  --accent: #ec4899; /* pink */
+}
+
+.card[data-category="COMEDY"] {
+  --accent: #eab308; /* yellow */
 }
 
