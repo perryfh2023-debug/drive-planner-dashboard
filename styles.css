@@ -530,12 +530,27 @@ body {
 }
 
 /* =========================================================
-   DAY VIEW – ATTENDANCE-DRIVEN EMPHASIS
+   DAY VIEW – ATTENDANCE EDGE EMPHASIS (CORRECT)
    ========================================================= */
 
 .day {
-  background: rgba(203, 213, 225, calc(0.25 + 0.25 * var(--day-density, 0)));
+  position: relative;
 }
+
+/* Left edge indicator driven by attendance */
+.day::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 4px;
+
+  /* Subtle, data-driven emphasis */
+  background: rgba(59, 130, 246, calc(0.12 + 0.55 * var(--day-density, 0)));
+}
+
 
 
 
