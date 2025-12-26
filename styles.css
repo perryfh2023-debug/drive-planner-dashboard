@@ -231,3 +231,55 @@ body {
   text-align: center;
 }
 
+/* =========================================================
+   CLICKABLE AFFORDANCES
+   ========================================================= */
+
+/* ---------- Month View Day Cells ---------- */
+
+.month-day.clickable {
+  cursor: pointer;
+}
+
+/* Desktop hover */
+.month-day.clickable:hover {
+  filter: brightness(0.95);
+}
+
+/* Mobile / touch press */
+.month-day.clickable:active {
+  filter: brightness(0.9);
+}
+
+
+/* ---------- Week View Day Cards ---------- */
+
+.day.clickable {
+  cursor: pointer;
+}
+
+/* Desktop hover */
+.day.clickable:hover {
+  filter: brightness(0.96);
+}
+
+/* Mobile / touch press */
+.day.clickable:active {
+  filter: brightness(0.9);
+}
+
+
+/* ---------- Day View Event Links ---------- */
+
+/* Make "View event" unmistakably a link */
+.card a {
+  color: #1f3a8a;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+/* Hover feedback for desktop */
+.card a:hover {
+  color: #1d4ed8;
+}
+
