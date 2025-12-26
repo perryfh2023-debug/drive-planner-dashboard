@@ -80,7 +80,7 @@ body {
 
 /* Crisp divider between header and content */
 .top-bar {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.18);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.22);
 }
 
 /* ================================
@@ -437,6 +437,7 @@ body {
 .card div[style*="height: 1px"] {
   background: #d1d9e6;
 }
+
 
 
 
