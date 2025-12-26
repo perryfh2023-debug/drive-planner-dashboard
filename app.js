@@ -484,6 +484,18 @@ if (selectedDayKey && !grouped[selectedDayKey]) {
           const c = document.createElement("div");
           c.className = "card";
 
+           // Category (subtle label)
+if (e.category) {
+  const category = document.createElement("div");
+  category.className = "muted";
+  category.textContent = e.category.toUpperCase();
+  category.style.fontSize = "0.65rem";
+  category.style.fontWeight = "600";
+  category.style.letterSpacing = "0.04em";
+  category.style.marginBottom = "2px";
+  c.appendChild(category);
+}
+
           // Title
           const title = document.createElement("h3");
           title.textContent = e.title || "";
@@ -569,6 +581,7 @@ block.appendChild(disclaimer);
    ========================================================= */
 
 loadEvents();
+
 
 
 
