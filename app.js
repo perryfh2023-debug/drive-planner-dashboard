@@ -337,6 +337,11 @@ function syncTopNav() {
    ========================================================= */
 
 function applyView() {
+  // Keep top nav buttons in sync with the current view
+  document.querySelectorAll("[data-view]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === currentView);
+  });
+
   if (currentView === "day" && selectedDayKey) {
     renderDayView(selectedDayKey);
     return;
@@ -352,7 +357,6 @@ function applyView() {
     return;
   }
 }
-
 
 /* =========================================================
    VIEW BUTTONS
@@ -500,6 +504,7 @@ block.appendChild(disclaimer);
    ========================================================= */
 
 loadEvents();
+
 
 
 
