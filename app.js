@@ -271,28 +271,32 @@ function renderMonthView() {
 
   const grouped = groupEventsByDay(allEvents);
 
-  /* ---------- Header ---------- */
-  const header = document.createElement("div");
-  header.className = "muted";
-  header.textContent = "Next 30 days";
-  header.style.marginBottom = "6px";
-  app.appendChild(header);
+  /* ---------- Panel Wrapper ---------- */
+  const panel = document.createElement("div");
+  panel.className = "month-panel";
+  app.appendChild(panel);
 
-  /* ---------- Weekday Headers ---------- */
+  /* ---------- Header Band ---------- */
+  const header = document.createElement("div");
+  header.className = "month-header";
+
+  const title = document.createElement("div");
+  title.className = "title";
+  title.textContent = "Next 30 days";
+  header.appendChild(title);
+
   const weekdayRow = document.createElement("div");
   weekdayRow.className = "week-days";
-  weekdayRow.style.marginBottom = "4px";
 
   ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(d => {
     const wd = document.createElement("div");
-    wd.className = "muted";
-    wd.style.fontSize = "0.7rem";
-    wd.style.textAlign = "center";
+    wd.className = "weekday";
     wd.textContent = d;
     weekdayRow.appendChild(wd);
   });
 
-  app.appendChild(weekdayRow);
+  header.appendChild(weekdayRow);
+  panel.appendChild(header);
 
   /* ---------- Calendar Grid ---------- */
   let cursor = getWeekStartMonday(today);
@@ -360,7 +364,7 @@ function renderMonthView() {
       row.appendChild(cell);
     }
 
-    app.appendChild(row);
+    panel.appendChild(row);
     cursor.setDate(cursor.getDate() + 7);
   }
 
@@ -370,11 +374,10 @@ function renderMonthView() {
   legend.style.fontSize = "0.7rem";
   legend.style.marginTop = "8px";
   legend.textContent = "ec = event count • ae = estimated attendance";
-  app.appendChild(legend);
+  panel.appendChild(legend);
 
   applyTopBarIntensity(0);
 }
-
 
 function syncTopNav() {
   document.querySelectorAll("[data-view]").forEach(btn => {
@@ -554,6 +557,7 @@ block.appendChild(disclaimer);
    ========================================================= */
 
 loadEvents();
+
 
 
 
