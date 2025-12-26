@@ -74,6 +74,28 @@ body {
   border-color: #2f6fed;
 }
 
+/* ================================
+   CITY HEADER TYPOGRAPHY
+   ================================ */
+
+.top-bar .city {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.top-bar .city-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: 0.01em;
+}
+
+.top-bar .city-sub {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #475569; /* muted */
+}
 
 /* =========================================================
    WEEK + DAY VIEW CARDS
@@ -406,6 +428,7 @@ body {
 .card div[style*="height: 1px"] {
   background: #d1d9e6;
 }
+
 
 
 
