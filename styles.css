@@ -395,7 +395,7 @@ body {
 }
 
 .card[data-category="SPORTS"] {
-  --accent: #22c55e; /* green */
+  --accent: #22c55e; /* red */
 }
 
 .card[data-category="FESTIVALS"] {
@@ -554,6 +554,17 @@ body {
     246,
     calc(0.35 + 0.75 * var(--day-density, 0))
   );
+}
+
+/* =========================================================
+   MONTH VIEW – MOBILE TEXT TUNING
+   ========================================================= */
+
+/* Event count + attendance in month cells */
+.month-day .muted {
+  font-size: 0.65rem;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 
