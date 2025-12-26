@@ -283,3 +283,55 @@ body {
   color: #1d4ed8;
 }
 
+/* =========================================================
+   DAY VIEW CARDS – VISUAL STRUCTURE & CHARACTER
+   ========================================================= */
+
+/* Base card elevation and spacing */
+.card {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Subtle left accent stripe */
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 4px;
+  background: #3b82f6; /* accent hue */
+  opacity: 0.25;
+}
+
+/* Event title prominence */
+.card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #111827;
+}
+
+/* Muted metadata tuning */
+.card .muted {
+  color: #4b5563;
+  line-height: 1.4;
+}
+
+/* Notes callout styling (soft insight box) */
+.card div[style*="background"] {
+  background: #eef2f7;
+  border-left: 3px solid #c7d2fe;
+}
+
+/* Improve spacing between grouped sections */
+.card > div {
+  margin-top: 2px;
+}
+
