@@ -475,6 +475,34 @@ body {
 }
 
 
+/* =========================================================
+   DAY VIEW – DAY HEADER CLEANUP
+   ========================================================= */
+
+/* Day container */
+.day {
+  padding: 12px 14px;
+}
+
+/* Day title */
+.day h2 {
+  margin-bottom: 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Day summary lines */
+.day > .muted {
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+/* Pull summary closer to header */
+.day > .muted + .muted {
+  margin-top: -2px;
+}
+
 
 
 
