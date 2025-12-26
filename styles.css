@@ -395,7 +395,7 @@ body {
 }
 
 .card[data-category="SPORTS"] {
-  --accent: #22c55e; /* red */
+  --accent: #ef4444; /* red */
 }
 
 .card[data-category="FESTIVALS"] {
@@ -566,6 +566,7 @@ body {
   line-height: 1.1;
   white-space: nowrap;
 }
+
 
 
 
