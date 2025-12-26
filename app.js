@@ -377,6 +377,7 @@ function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // Navigation back to Week
   const nav = document.createElement("button");
   nav.className = "nav-link";
   nav.textContent = "← To On the Horizon";
@@ -391,6 +392,7 @@ function renderGroupedEvents(grouped) {
     const block = document.createElement("div");
     block.className = "day";
 
+    // Day header
     const h = document.createElement("h2");
     h.textContent = formatDayKey(dayKey);
     block.appendChild(h);
@@ -404,59 +406,65 @@ function renderGroupedEvents(grouped) {
       grouped[dayKey]
         .sort((a, b) => a._start - b._start)
         .forEach(e => {
-  const c = document.createElement("div");
-  c.className = "card";
+          const c = document.createElement("div");
+          c.className = "card";
 
-  // Title
-  const title = document.createElement("h3");
-  title.textContent = e.title || "";
-  c.appendChild(title);
+          // Title
+          const title = document.createElement("h3");
+          title.textContent = e.title || "";
+          c.appendChild(title);
 
-  // Time
-  if (e._start) {
-    const time = document.createElement("div");
-    time.className = "muted";
-    time.textContent = e._start.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit"
-    });
-    c.appendChild(time);
-  }
-// Venue
-if (e.venue) {
-  const venue = document.createElement("div");
-  venue.className = "muted";
-  venue.textContent = e.venue;
-  c.appendChild(venue);
-}
-// Attendance
-if (Number.isFinite(Number(e.attendanceEstimate))) {
-  const attendance = document.createElement("div");
-  attendance.className = "muted";
-  attendance.textContent =
-    `Estimated attendance: ~${formatAttendance(e.attendanceEstimate)}`;
-  c.appendChild(attendance);
-}
-           
-// View event link
-if (e.link) {
-  const link = document.createElement("a");
-  link.href = e.link;
-  link.target = "_blank";
-  link.rel = "noopener";
-  link.className = "muted";
-  link.textContent = "View event";
-  c.appendChild(link);
-}
-     
-// Venue address
-if (e.address) {
-  const address = document.createElement("div");
-  address.className = "muted";
-  address.textContent = e.address;
-  c.appendChild(address);
-}
+          // Time
+          if (e._start) {
+            const time = document.createElement("div");
+            time.className = "muted";
+            time.textContent = e._start.toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit"
+            });
+            c.appendChild(time);
+          }
+
+          // Venue
+          if (e.venue) {
+            const venue = document.createElement("div");
+            venue.className = "muted";
+            venue.textContent = e.venue;
+            c.appendChild(venue);
+          }
+
+          // Address
+          if (e.address) {
+            const address = document.createElement("div");
+            address.className = "muted";
+            address.textContent = e.address;
+            c.appendChild(address);
+          }
+
+          // Attendance
+          if (Number.isFinite(Number(e.attendanceEstimate))) {
+            const attendance = document.createElement("div");
+            attendance.className = "muted";
+            attendance.textContent =
+              `Estimated attendance: ~${formatAttendance(e.attendanceEstimate)}`;
+            c.appendChild(attendance);
+          }
+
+          // View event link
+          if (e.link) {
+            const link = document.createElement("a");
+            link.href = e.link;
+            link.target = "_blank";
+            link.rel = "noopener";
+            link.className = "muted";
+            link.textContent = "View event";
+            c.appendChild(link);
+          }
+
+          block.appendChild(c);
         });
+    }
+
     app.appendChild(block);
   });
 }
@@ -467,6 +475,7 @@ if (e.address) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
