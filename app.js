@@ -402,8 +402,9 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
-  }
+  
         
+
 
 
 
