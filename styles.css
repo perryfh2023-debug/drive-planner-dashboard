@@ -35,8 +35,8 @@ body {
   /* OPAQUE, CLAMPED HEADER */
   background: linear-gradient(
     to bottom,
-    rgb(185, 205, 235),
-    rgb(165, 190, 225)
+   rgb(170, 190, 220),
+    rgb(150, 175, 210)
   );
 }
 
@@ -45,7 +45,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(47, 111, 237, calc(0.15 * var(--density, 0)));
+  background: rgba(47, 111, 237, calc(0.12 * var(--density, 0)));
   pointer-events: none;
 }
 
@@ -406,5 +406,6 @@ body {
 .card div[style*="height: 1px"] {
   background: #d1d9e6;
 }
+
 
 
