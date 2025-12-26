@@ -484,6 +484,11 @@ function renderGroupedEvents(grouped) {
           const c = document.createElement("div");
           c.className = "card";
 
+          // 🔑 CATEGORY HOOK FOR CSS COLORING
+          if (e.category) {
+            c.setAttribute("data-category", e.category.toUpperCase());
+          }
+
           /* ---------- Category ---------- */
           if (e.category) {
             const category = document.createElement("div");
@@ -584,13 +589,12 @@ function renderGroupedEvents(grouped) {
   });
 }
 
-
-
 /* =========================================================
    BOOT
    ========================================================= */
 
 loadEvents();
+
 
 
 
