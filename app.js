@@ -478,6 +478,13 @@ if (selectedDayKey && !grouped[selectedDayKey]) {
         });
     }
 
+// Attendance disclaimer (footnote)
+const disclaimer = document.createElement("div");
+disclaimer.className = "muted";
+disclaimer.textContent =
+  "Attendance estimates are based on publicly available data.";
+block.appendChild(disclaimer);
+     
     app.appendChild(block);
   });
 }
@@ -488,6 +495,7 @@ if (selectedDayKey && !grouped[selectedDayKey]) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
