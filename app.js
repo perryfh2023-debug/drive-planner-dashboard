@@ -456,7 +456,7 @@ if (e.address) {
   address.textContent = e.address;
   c.appendChild(address);
 }
-
+        });
     app.appendChild(block);
   });
 }
@@ -467,6 +467,7 @@ if (e.address) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
