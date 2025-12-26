@@ -439,14 +439,14 @@ function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
- // Ensure the selected day always renders, even if no events
-if (selectedDayKey && !grouped[selectedDayKey]) {
-  grouped = {
-    [selectedDayKey]: [],
-    ...grouped
-  };
-}
-  
+  // Ensure the selected day always renders, even if no events
+  if (selectedDayKey && !grouped[selectedDayKey]) {
+    grouped = {
+      [selectedDayKey]: [],
+      ...grouped
+    };
+  }
+
   // Navigation back to Week
   const nav = document.createElement("button");
   nav.className = "nav-link";
@@ -467,41 +467,45 @@ if (selectedDayKey && !grouped[selectedDayKey]) {
     h.textContent = formatDayKey(dayKey);
     block.appendChild(h);
 
-   if (grouped[dayKey].length === 0) {
-  const msg = document.createElement("div");
-  msg.className = "muted";
-  msg.textContent = "No event data available for today.";
-  block.appendChild(msg);
+    if (grouped[dayKey].length === 0) {
+      const msg = document.createElement("div");
+      msg.className = "muted";
+      msg.textContent = "No event data available for today.";
+      block.appendChild(msg);
 
-  const sub = document.createElement("div");
-  sub.className = "muted";
-  sub.textContent = "Check upcoming days for activity.";
-  block.appendChild(sub);
-} else {
+      const sub = document.createElement("div");
+      sub.className = "muted";
+      sub.textContent = "Check upcoming days for activity.";
+      block.appendChild(sub);
+    } else {
       grouped[dayKey]
         .sort((a, b) => a._start - b._start)
         .forEach(e => {
           const c = document.createElement("div");
           c.className = "card";
 
-           // Category (subtle label)
-if (e.category) {
-  const category = document.createElement("div");
-  category.className = "muted";
-  category.textContent = e.category.toUpperCase();
-  category.style.fontSize = "0.65rem";
-  category.style.fontWeight = "600";
-  category.style.letterSpacing = "0.04em";
-  category.style.marginBottom = "2px";
-  c.appendChild(category);
-}
+          /* ---------- Category ---------- */
+          if (e.category) {
+            const category = document.createElement("div");
+            category.className = "muted";
+            category.textContent = e.category.toUpperCase();
+            category.style.fontSize = "0.65rem";
+            category.style.fontWeight = "600";
+            category.style.letterSpacing = "0.04em";
+            category.style.marginBottom = "2px";
+            c.appendChild(category);
+          }
 
-          // Title
+          /* ---------- Title ---------- */
           const title = document.createElement("h3");
           title.textContent = e.title || "";
           c.appendChild(title);
 
-          // Time
+          /* ---------- Context group (time + venue + address) ---------- */
+          const context = document.createElement("div");
+          context.style.marginTop = "4px";
+          context.style.marginBottom = "6px";
+
           if (e._start) {
             const time = document.createElement("div");
             time.className = "muted";
@@ -509,26 +513,26 @@ if (e.category) {
               hour: "numeric",
               minute: "2-digit"
             });
-            c.appendChild(time);
+            context.appendChild(time);
           }
 
-          // Venue
           if (e.venue) {
             const venue = document.createElement("div");
             venue.className = "muted";
             venue.textContent = e.venue;
-            c.appendChild(venue);
+            context.appendChild(venue);
           }
 
-          // Address
           if (e.address) {
             const address = document.createElement("div");
             address.className = "muted";
             address.textContent = e.address;
-            c.appendChild(address);
+            context.appendChild(address);
           }
 
-          // Attendance
+          c.appendChild(context);
+
+          /* ---------- Attendance ---------- */
           if (Number.isFinite(Number(e.attendanceEstimate))) {
             const attendance = document.createElement("div");
             attendance.className = "muted";
@@ -537,7 +541,7 @@ if (e.category) {
             c.appendChild(attendance);
           }
 
-          // View event link
+          /* ---------- View event link ---------- */
           if (e.link) {
             const link = document.createElement("a");
             link.href = e.link;
@@ -548,32 +552,38 @@ if (e.category) {
             c.appendChild(link);
           }
 
-          // Notes
-if (e.notes && String(e.notes).trim()) {
-  const notes = document.createElement("div");
-  notes.className = "muted";
-  notes.textContent = e.notes;
-  notes.style.marginTop = "6px";
-  notes.style.padding = "6px 8px";
-  notes.style.borderRadius = "6px";
-  notes.style.background = "#eef1f5";
-  c.appendChild(notes);
-}
- 
+          /* ---------- Notes (with divider) ---------- */
+          if (e.notes && String(e.notes).trim()) {
+            const divider = document.createElement("div");
+            divider.style.height = "1px";
+            divider.style.background = "#e5e7eb";
+            divider.style.margin = "6px 0";
+            c.appendChild(divider);
+
+            const notes = document.createElement("div");
+            notes.className = "muted";
+            notes.textContent = e.notes;
+            notes.style.padding = "6px 8px";
+            notes.style.borderRadius = "6px";
+            notes.style.background = "#eef1f5";
+            c.appendChild(notes);
+          }
+
           block.appendChild(c);
         });
     }
 
-// Attendance disclaimer (footnote)
-const disclaimer = document.createElement("div");
-disclaimer.className = "muted";
-disclaimer.textContent =
-  "Attendance estimates are based on publicly available data.";
-block.appendChild(disclaimer);
-     
+    // Attendance disclaimer (footnote)
+    const disclaimer = document.createElement("div");
+    disclaimer.className = "muted";
+    disclaimer.textContent =
+      "Attendance estimates are based on publicly available data.";
+    block.appendChild(disclaimer);
+
     app.appendChild(block);
   });
 }
+
 
 
 /* =========================================================
@@ -581,6 +591,7 @@ block.appendChild(disclaimer);
    ========================================================= */
 
 loadEvents();
+
 
 
 
