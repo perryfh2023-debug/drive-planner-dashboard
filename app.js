@@ -464,6 +464,10 @@ function renderGroupedEvents(grouped) {
   Object.keys(grouped).sort().forEach(dayKey => {
     const block = document.createElement("div");
     block.className = "day";
+     const dayEvents = grouped[dayKey] || [];
+const daySummary = getDaySummary(dayEvents);
+const dayIntensity = calculateDayIntensity(daySummary);
+block.style.setProperty("--day-density", dayIntensity);
 
     // Day header
     const h = document.createElement("h2");
@@ -597,6 +601,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
