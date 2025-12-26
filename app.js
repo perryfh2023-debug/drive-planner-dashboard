@@ -377,6 +377,14 @@ function renderGroupedEvents(grouped) {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+ // Ensure the selected day always renders, even if no events
+if (selectedDayKey && !grouped[selectedDayKey]) {
+  grouped = {
+    [selectedDayKey]: [],
+    ...grouped
+  };
+}
+  
   // Navigation back to Week
   const nav = document.createElement("button");
   nav.className = "nav-link";
@@ -480,6 +488,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
