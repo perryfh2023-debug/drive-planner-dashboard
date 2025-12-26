@@ -233,9 +233,53 @@ function renderWeekView() {
     block.appendChild(h);
 
     const c = document.createElement("div");
-    c.className = "muted";
-    c.textContent = `${summary.eventCount} events`;
-    block.appendChild(c);
+c.className = "card";
+
+// Title
+const title = document.createElement("h3");
+title.textContent = e.title || "";
+c.appendChild(title);
+
+// Time
+if (e._start) {
+  const time = document.createElement("div");
+  time.className = "muted";
+  time.textContent = e._start.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+  c.appendChild(time);
+}
+
+// Venue
+if (e.venue) {
+  const venue = document.createElement("div");
+  venue.className = "muted";
+  venue.textContent = e.venue;
+  c.appendChild(venue);
+}
+
+// Attendance
+if (Number.isFinite(Number(e.attendanceEstimate))) {
+  const attendance = document.createElement("div");
+  attendance.className = "muted";
+  attendance.textContent =
+    `Estimated attendance: ~${formatAttendance(e.attendanceEstimate)}`;
+  c.appendChild(attendance);
+}
+
+// View Event link
+if (e.source) {
+  const link = document.createElement("a");
+  link.href = e.source;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.className = "muted";
+  link.textContent = "View event";
+  c.appendChild(link);
+}
+
+block.appendChild(c);
 
     if (summary.attendanceSum > 0) {
       const a = document.createElement("div");
@@ -423,6 +467,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
