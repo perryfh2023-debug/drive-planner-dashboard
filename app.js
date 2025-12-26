@@ -169,9 +169,12 @@ function calculateDayIntensity(summary) {
 function applyTopBarIntensity(intensity) {
   const bar = document.querySelector(".top-bar");
   if (!bar) return;
-  bar.style.setProperty("--density", Math.pow(intensity, 1.2));
-}
 
+  // Clamp intensity to avoid glare
+  const clamped = Math.min(Math.max(intensity, 0.25), 0.75);
+
+  bar.style.setProperty("--density", clamped);
+}
 
 /* =========================================================
    RENDERERS
@@ -594,6 +597,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
