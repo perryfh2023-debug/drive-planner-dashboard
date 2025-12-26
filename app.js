@@ -237,7 +237,6 @@ c.className = "card";
 
 // Title
 const title = document.createElement("h3");
-title.textContent = e.title || "";
 c.appendChild(title);
 
 // Time
@@ -467,6 +466,7 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
 
 
 
