@@ -404,11 +404,27 @@ function renderGroupedEvents(grouped) {
       grouped[dayKey]
         .sort((a, b) => a._start - b._start)
         .forEach(e => {
-          const c = document.createElement("div");
-          c.className = "card";
-          c.innerHTML = `<h3>${e.title || ""}</h3>`;
-          block.appendChild(c);
-        });
+  const c = document.createElement("div");
+  c.className = "card";
+
+  // Title
+  const title = document.createElement("h3");
+  title.textContent = e.title || "";
+  c.appendChild(title);
+
+  // Time
+  if (e._start) {
+    const time = document.createElement("div");
+    time.className = "muted";
+    time.textContent = e._start.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit"
+    });
+    c.appendChild(time);
+  }
+
+  block.appendChild(c);
+});
     }
 
     app.appendChild(block);
@@ -421,3 +437,4 @@ function renderGroupedEvents(grouped) {
    ========================================================= */
 
 loadEvents();
+
