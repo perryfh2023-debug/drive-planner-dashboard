@@ -30,14 +30,23 @@ body {
   z-index: 100;
 
   padding: 12px;
-  border-bottom: 1px solid #aeb4be;
+  border-bottom: 1px solid #94a3b8;
 
-  /* View-level intensity */
+  /* OPAQUE, CLAMPED HEADER */
   background: linear-gradient(
     to bottom,
-    rgba(47, 111, 237, calc(0.08 + 0.40 * var(--density, 0))),
-    rgba(47, 111, 237, calc(0.02 + 0.20 * var(--density, 0)))
+    rgb(185, 205, 235),
+    rgb(165, 190, 225)
   );
+}
+
+/* Intensity overlay (controlled, non-transparent) */
+.top-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(47, 111, 237, calc(0.15 * var(--density, 0)));
+  pointer-events: none;
 }
 
 .city {
@@ -397,4 +406,5 @@ body {
 .card div[style*="height: 1px"] {
   background: #d1d9e6;
 }
+
 
