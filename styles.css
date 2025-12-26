@@ -503,6 +503,32 @@ body {
   margin-top: -2px;
 }
 
+/* =========================================================
+   DAY VIEW – MULTI-DAY SCANABILITY
+   ========================================================= */
+
+/* Treat day blocks as sections, not cards */
+.day {
+  margin-bottom: 18px;     /* more space between days */
+  background: #edf1f5;     /* slightly darker, calmer */
+}
+
+/* Soften the day container edge */
+.day {
+  box-shadow: none;
+}
+
+/* Give the day header some air */
+.day h2 {
+  margin-top: 2px;
+  margin-bottom: 6px;
+}
+
+/* Reduce density of repeated muted lines */
+.day > .muted {
+  line-height: 1.3;
+}
+
 
 
 
