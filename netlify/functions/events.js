@@ -11,9 +11,9 @@ const MAKE_EXPORT_URL =
 
 /**
  * Optional: protect refresh endpoint.
- * If EVENTS_REFRESH_TOKEN is set in Netlify env, POST must include:
- *   x-refresh-token: <token>
- * If not set, POST is allowed (matches your current behavior).
+ * If EVENTS_REFRESH_TOKEN is set in Netlify env, refresh must include:
+ *   - x-refresh-token header OR
+ *   - ?token=... query param (handy for schedulers)
  */
 const REFRESH_TOKEN = process.env.EVENTS_REFRESH_TOKEN || "";
 
@@ -140,21 +140,30 @@ function jsonResponse(obj, { status = 200, extraHeaders = {} } = {}) {
   });
 }
 
+function refreshAuthorized(req, url) {
+  if (!REFRESH_TOKEN) return true;
+
+  const tokenHeader = req.headers.get("x-refresh-token") || "";
+  const tokenQuery = url.searchParams.get("token") || "";
+
+  return tokenHeader === REFRESH_TOKEN || tokenQuery === REFRESH_TOKEN;
+}
+
 export default async (req) => {
   const store = getStore("events");
   const key = "events.json";
 
   try {
+    // Detect GET refresh trigger
+    const url = new URL(req.url);
+    const refreshParam = (url.searchParams.get("refresh") || "").toLowerCase();
+    const refreshViaGet =
+      req.method === "GET" && (refreshParam === "1" || refreshParam === "true");
+
     // WRITE / REFRESH: fetch from Make and cache
-    if (req.method === "POST") {
-      if (REFRESH_TOKEN) {
-        const token = req.headers.get("x-refresh-token") || "";
-        if (token !== REFRESH_TOKEN) {
-          return jsonResponse(
-            { ok: false, error: "Unauthorized" },
-            { status: 401 }
-          );
-        }
+    if (req.method === "POST" || refreshViaGet) {
+      if (!refreshAuthorized(req, url)) {
+        return jsonResponse({ ok: false, error: "Unauthorized" }, { status: 401 });
       }
 
       const data = await fetchMakeSnapshot();
@@ -165,16 +174,14 @@ export default async (req) => {
         count: data.events.length,
         generatedAt: data.generatedAt,
         source: "make",
+        refreshMethod: req.method === "POST" ? "POST" : "GET?refresh=1",
       });
     }
 
-    // READ: serve cached events to dashboard/app
+    // READ: serve cached events to dashboard/app (FAST, NOT LIVE)
     const cached = await store.get(key, { type: "json" });
     return jsonResponse(cached ?? { events: [] });
   } catch (err) {
-    return jsonResponse(
-      { ok: false, error: String(err) },
-      { status: 500 }
-    );
+    return jsonResponse({ ok: false, error: String(err) }, { status: 500 });
   }
 };
