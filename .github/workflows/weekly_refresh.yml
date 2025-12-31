@@ -9,12 +9,10 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-            - name: POST refresh to Netlify events function
+      - name: POST refresh to Netlify events function
         run: |
           echo "POSTing to Netlify refresh endpoint..."
-          curl -sS -L --post301 --post302 --post303 \
-            -X POST "https://dpdashboard.netlify.app/.netlify/functions/events" \
+          curl -sS -X POST "https://dpdashboard.netlify.app/.netlify/functions/events" \
             -H "Content-Type: application/json" \
             -w "\nHTTP_STATUS=%{http_code}\n" \
-            -D - \
-            -o /dev/stdout
+            --fail
