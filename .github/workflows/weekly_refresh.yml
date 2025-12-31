@@ -2,32 +2,13 @@ name: Weekly Events Refresh
 
 on:
   schedule:
-    # Weekly at 12:00 UTC every Monday
     - cron: "0 12 * * 1"
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
       - name: POST refresh to Netlify events function
-        env:
-          REFRESH_URL: ${{ secrets.REFRESH_URL }}
-          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         run: |
-          if [ -z "$REFRESH_URL" ]; then
-            echo "Missing secret REFRESH_URL"
-            exit 1
-          fi
-
-          if [ -n "$REFRESH_TOKEN" ]; then
-            curl -sS -X POST "$REFRESH_URL" \
-              -H "x-refresh-token: $REFRESH_TOKEN" \
-              -H "Content-Type: application/json" \
-              --fail
-          else
-            curl -sS -X POST "$REFRESH_URL" \
-              -H "Content-Type: application/json" \
-              --fail
-          fi
-
+          curl -sS -X POST "https://dpdashboard.netlify.app/.netlify/functions/events" --fail
