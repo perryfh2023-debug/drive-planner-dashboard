@@ -650,10 +650,13 @@ body {
 
 .header-weather {
   margin-bottom: 10px;
-  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
   border-radius: 10px;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  background: rgba(238, 241, 245, 0.55);
+  border: none;
+  background: rgba(255, 255, 255, 0.25);
+  max-width: 100%;
 }
 
 .header-weather .wx-line {
@@ -663,8 +666,8 @@ body {
 }
 
 .header-weather img {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
 }
 
@@ -676,15 +679,31 @@ body {
 }
 
 .header-weather .wx-meta {
-  margin-top: 2px;
+  margin-top: 1px;
   font-size: 0.8rem;
   color: #334155;
 }
 
-.header-weather .wx-updated {
-  margin-top: 4px;
-  font-size: 0.75rem;
-  color: #475569;
+.wx-mini {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-size: 0.78rem;
+}
+
+.wx-mini img {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  flex: 0 0 auto;
+}
+
+.wx-mini-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .weather-day {
