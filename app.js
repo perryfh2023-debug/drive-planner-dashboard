@@ -229,7 +229,7 @@ function renderWeekView() {
     maxIntensity = Math.max(maxIntensity, intensity);
 
     const block = document.createElement("div");
-    block.className = "day clickable";
+    block.className = "day clickable week-day";
     block.style.setProperty("--density", intensity);
 
     const h = document.createElement("h2");
@@ -601,6 +601,7 @@ block.style.setProperty("--day-density", dayIntensity);
    ========================================================= */
 
 loadEvents();
+
 
 
 
