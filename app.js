@@ -63,8 +63,10 @@ async function loadWeather() {
 
     renderHeaderWeather();
 
-    // Refresh the current view so weather can appear in Week/Day.
-    applyView();
+    // If you're currently in Day view, refresh so the day weather card appears.
+    if (currentView === "day" && selectedDayKey) {
+      applyView();
+    }
   } catch (err) {
     console.error("Failed to load weather", err);
     weatherData = null;
@@ -93,41 +95,28 @@ function ensureHeaderWeatherContainer() {
   const header = document.querySelector(".top-bar");
   if (!header) return null;
 
+  let el = header.querySelector(".header-weather");
+  if (el) return el;
+
+  el = document.createElement("div");
+  el.className = "header-weather";
+
   const city = header.querySelector(".city");
-  if (!city) return null;
+  const nav = header.querySelector("nav.views");
 
-  // Build a two-column header row:
-  // [ City + Subtitle ]   [ Weather + Updated ]
-  let row = city.querySelector(".city-row");
-  if (!row) {
-    row = document.createElement("div");
-    row.className = "city-row";
-    city.insertBefore(row, city.firstChild);
+  // Prefer: City, Weather, Nav
+  if (city && city.parentElement === header) {
+    // Insert right after city
+    if (city.nextSibling) header.insertBefore(el, city.nextSibling);
+    else header.appendChild(el);
+  } else if (nav) {
+    header.insertBefore(el, nav);
+  } else {
+    header.appendChild(el);
   }
 
-  let left = row.querySelector(".city-left");
-  if (!left) {
-    left = document.createElement("div");
-    left.className = "city-left";
-    row.insertBefore(left, row.firstChild);
-  }
-
-  const nameEl = city.querySelector(".city-name");
-  const subEl = city.querySelector(".city-sub");
-
-  if (nameEl && nameEl.parentElement !== left) left.appendChild(nameEl);
-  if (subEl && subEl.parentElement !== left) left.appendChild(subEl);
-
-  let wx = row.querySelector(".city-weather");
-  if (!wx) {
-    wx = document.createElement("div");
-    wx.className = "city-weather";
-    row.appendChild(wx);
-  }
-
-  return wx;
+  return el;
 }
-
 
 function renderHeaderWeather() {
   const el = ensureHeaderWeatherContainer();
@@ -135,35 +124,39 @@ function renderHeaderWeather() {
 
   el.innerHTML = "";
 
-  // Compact, secondary: show forecast inline next to city name
   if (!weatherData || !weatherData.ok) {
-    el.textContent = "Wx unavailable";
+    const t = document.createElement("div");
+    t.className = "muted";
+    t.textContent = "Weather unavailable";
+    el.appendChild(t);
     return;
   }
 
   const todayKey = getLocalDayKey(new Date());
   const d = getWeatherForDay(todayKey) || weatherData.days?.[0];
-  if (!d) {
-    el.textContent = "Wx unavailable";
-    return;
+
+  const line = document.createElement("div");
+  line.className = "wx-line";
+
+  if (d?.icon) {
+    const img = document.createElement("img");
+    img.src = d.icon;
+    img.alt = d.shortForecast || "Forecast icon";
+    img.loading = "lazy";
+    line.appendChild(img);
   }
 
-  // Tooltip carries the "extras" so we don't steal the show in the header
-  const updatedIso = weatherData.generatedAt || weatherData.updatedAt;
-  const tipParts = [];
-  if (d.shortForecast) tipParts.push(d.shortForecast);
-  if (updatedIso) {
-    try {
-      tipParts.push(
-        "Updated " +
-          new Date(updatedIso).toLocaleTimeString([], {
-            hour: "numeric",
-            minute: "2-digit"
-          })
-      );
-    } catch {}
-  }
-  if (tipParts.length) el.title = tipParts.join(" • ");
+  const main = document.createElement("div");
+  main.className = "wx-main";
+
+  const headline = document.createElement("div");
+  headline.className = "wx-headline";
+  headline.textContent =
+    (d?.date === todayKey ? "Today" : "Forecast") +
+    (d?.shortForecast ? ` • ${d.shortForecast}` : "");
+
+  const meta = document.createElement("div");
+  meta.className = "wx-meta";
 
   const temps = formatWxTemps(d);
   const precip =
@@ -171,50 +164,37 @@ function renderHeaderWeather() {
       ? `${d.precip}%`
       : "";
 
-  // Main line: "Cloudy • 36/28 • 6%"
-  const parts = [];
-  if (d.shortForecast) parts.push(d.shortForecast);
-  if (temps) parts.push(temps);
-  if (precip) parts.push(precip);
+  meta.textContent =
+    [temps, precip && `Precip ${precip}`].filter(Boolean).join(" • ") || "";
 
-  const main = document.createElement("div");
-  main.className = "city-weather-main";
+  main.appendChild(headline);
+  if (meta.textContent) main.appendChild(meta);
 
-  if (d.icon) {
-    const img = document.createElement("img");
-    img.src = d.icon;
-    img.alt = d.shortForecast || "Forecast icon";
-    img.loading = "lazy";
-    main.appendChild(img);
-  }
+  line.appendChild(main);
+  el.appendChild(line);
 
-  const text = document.createElement("div");
-  text.className = "city-weather-text";
-  text.textContent = parts.join(" • ");
-  main.appendChild(text);
-
-  el.appendChild(main);
-
-  // Updated line (tiny, under forecast)
+  // Small updated line (optional, subtle)
+  const updatedIso = weatherData.generatedAt || weatherData.updatedAt;
   if (updatedIso) {
+    const u = document.createElement("div");
+    u.className = "wx-updated";
     try {
-      const updated = document.createElement("div");
-      updated.className = "city-weather-updated";
-      updated.textContent =
+      u.textContent =
         "Updated " +
         new Date(updatedIso).toLocaleTimeString([], {
           hour: "numeric",
           minute: "2-digit"
         });
-      el.appendChild(updated);
-    } catch {}
+    } catch {
+      // ignore
+    }
+    el.appendChild(u);
   }
 }
 
-
 function buildDayWeatherElement(dayKey) {
   const wrap = document.createElement("div");
-  wrap.className = "weather-day weather-secondary";
+  wrap.className = "weather-day";
 
   const d = getWeatherForDay(dayKey);
 
@@ -263,40 +243,6 @@ function buildDayWeatherElement(dayKey) {
   if (details.textContent) body.appendChild(details);
 
   wrap.appendChild(body);
-  return wrap;
-}
-
-function buildMiniWeatherElement(dayKey) {
-  if (!weatherData || !weatherData.ok) return null;
-  const d = getWeatherForDay(dayKey);
-  if (!d) return null;
-
-  const wrap = document.createElement("div");
-  wrap.className = "wx-mini";
-
-  // Keep the long text available without taking up layout space.
-  if (d.shortForecast) wrap.title = d.shortForecast;
-
-  if (d.icon) {
-    const img = document.createElement("img");
-    img.src = d.icon;
-    img.alt = d.shortForecast || "Forecast icon";
-    img.loading = "lazy";
-    wrap.appendChild(img);
-  }
-
-  const text = document.createElement("div");
-  text.className = "wx-mini-text";
-
-  const temps = formatWxTemps(d);
-  const precip =
-    typeof d?.precip === "number" || typeof d?.precip === "string"
-      ? `Precip ${d.precip}%`
-      : "";
-
-  text.textContent = [temps, precip].filter(Boolean).join(" • ");
-  wrap.appendChild(text);
-
   return wrap;
 }
 
@@ -502,24 +448,16 @@ function renderWeekView() {
     block.appendChild(h);
 
     const c = document.createElement("div");
-    // Primary stat: keep readable even on mobile.
-    c.className = "week-primary";
+    c.className = "muted";
     c.textContent = `${summary.eventCount} events`;
     block.appendChild(c);
 
     if (summary.attendanceSum > 0) {
       const a = document.createElement("div");
-      // Secondary stat: still visible, but less dominant than event count.
-      a.className = "week-secondary";
+      a.className = "muted";
       a.textContent =
         `Estimated attendance: ~${formatAttendance(summary.attendanceSum)}`;
       block.appendChild(a);
-    }
-
-    
-    const wxMini = buildMiniWeatherElement(key);
-    if (wxMini) {
-      block.appendChild(wxMini);
     }
 
     block.addEventListener("click", () => {
@@ -542,10 +480,13 @@ function renderMonthView() {
   app.innerHTML = "";
 
   const today = startOfDay(new Date());
-  const end = new Date(today);
-  end.setDate(today.getDate() + 29);
-
   const grouped = groupEventsByDay(allEvents);
+
+  // Fixed horizon layout (not a "calendar"): first row starts on today, then 4 full Mon–Sun rows.
+  const gridStart = getWeekStartMonday(today);
+  const ROWS = 5;
+  const gridEnd = new Date(gridStart);
+  gridEnd.setDate(gridStart.getDate() + ROWS * 7 - 1);
 
   /* ---------- Panel Wrapper ---------- */
   const panel = document.createElement("div");
@@ -558,8 +499,15 @@ function renderMonthView() {
 
   const title = document.createElement("div");
   title.className = "title";
-  title.textContent = "Next 30 days";
+  title.textContent = "Looking ahead";
   header.appendChild(title);
+
+  const subtitle = document.createElement("div");
+  subtitle.className = "subtitle";
+  subtitle.textContent =
+    `${today.toLocaleDateString(undefined, { month: "short", day: "numeric" })} → ` +
+    `${gridEnd.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
+  header.appendChild(subtitle);
 
   const weekdayRow = document.createElement("div");
   weekdayRow.className = "week-days";
@@ -574,81 +522,76 @@ function renderMonthView() {
   header.appendChild(weekdayRow);
   panel.appendChild(header);
 
-  /* ---------- Calendar Grid ---------- */
-  let cursor = getWeekStartMonday(today);
-
-  while (cursor <= end) {
+  /* ---------- Grid (5 rows total) ---------- */
+  for (let rowIdx = 0; rowIdx < ROWS; rowIdx++) {
     const row = document.createElement("div");
     row.className = "week-days";
 
     for (let i = 0; i < 7; i++) {
-      const d = new Date(cursor);
-      d.setDate(cursor.getDate() + i);
+      const d = new Date(gridStart);
+      d.setDate(gridStart.getDate() + rowIdx * 7 + i);
       const dayKey = getLocalDayKey(d);
 
       const cell = document.createElement("div");
       cell.className = "month-day";
 
-      if (d >= today && d <= end) {
-        const events = grouped[dayKey] || [];
-        const summary = getDaySummary(events);
-        const intensity = calculateDayIntensity(summary);
-
-        cell.style.setProperty("--density", intensity);
-
-        /* ----- Day Anchor ----- */
-        const dateLabel = document.createElement("div");
-        dateLabel.style.fontWeight = "600";
-        dateLabel.style.fontSize = "0.8rem";
-        dateLabel.textContent = d.toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric"
-        });
-        cell.appendChild(dateLabel);
-
-        /* ----- Metrics ----- */
-        if (summary.eventCount > 0) {
-          const ec = document.createElement("div");
-          ec.className = "muted";
-          ec.style.fontSize = "0.7rem";
-          ec.textContent = `ec ${summary.eventCount}`;
-          cell.appendChild(ec);
-        }
-
-        if (summary.attendanceSum > 0) {
-          const ae = document.createElement("div");
-          ae.className = "muted";
-          ae.style.fontSize = "0.7rem";
-          ae.textContent = `ae ~${formatAttendance(summary.attendanceSum)}`;
-          cell.appendChild(ae);
-        }
-
-        cell.classList.add("clickable");
-        cell.addEventListener("click", () => {
-          if (isDateInCurrentWeek(d)) {
-            weekStartOverride = null;
-          } else {
-            weekStartOverride = getWeekStartMonday(d);
-          }
-          currentView = "week";
-          applyView();
-        });
-      } else {
+      // Line 1 starts on today; days before today in the first row are empty.
+      if (d < today) {
         cell.classList.add("empty");
+        row.appendChild(cell);
+        continue;
       }
+
+      const events = grouped[dayKey] || [];
+      const summary = getDaySummary(events);
+      const intensity = calculateDayIntensity(summary);
+
+      cell.style.setProperty("--density", intensity);
+
+      /* ----- Day Anchor ----- */
+      const dateLabel = document.createElement("div");
+      dateLabel.className = "date-label";
+      dateLabel.textContent = d.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric"
+      });
+      cell.appendChild(dateLabel);
+
+      /* ----- Metrics ----- */
+      if (summary.eventCount > 0) {
+        const ec = document.createElement("div");
+        ec.className = "muted metric";
+        ec.textContent = `ec ${summary.eventCount}`;
+        cell.appendChild(ec);
+      }
+
+      if (summary.attendanceSum > 0) {
+        const ae = document.createElement("div");
+        ae.className = "muted metric";
+        ae.textContent = `ae ~${formatAttendance(summary.attendanceSum)}`;
+        cell.appendChild(ae);
+      }
+
+      cell.classList.add("clickable");
+      cell.addEventListener("click", () => {
+        if (isDateInCurrentWeek(d)) {
+          weekStartOverride = null;
+        } else {
+          weekStartOverride = getWeekStartMonday(d);
+        }
+        currentView = "week";
+        applyView();
+      });
 
       row.appendChild(cell);
     }
 
     panel.appendChild(row);
-    cursor.setDate(cursor.getDate() + 7);
   }
 
   /* ---------- Legend ---------- */
   const legend = document.createElement("div");
-  legend.className = "muted";
-  legend.style.fontSize = "0.7rem";
-  legend.style.marginTop = "8px";
+  legend.className = "muted month-legend";
   legend.textContent = "ec = event count • ae = estimated attendance";
   panel.appendChild(legend);
 
@@ -749,6 +692,11 @@ block.style.setProperty("--day-density", dayIntensity);
     const h = document.createElement("h2");
     h.textContent = formatDayKey(dayKey);
     block.appendChild(h);
+
+    // Weather card (Day view only)
+    if (currentView === "day") {
+      block.appendChild(buildDayWeatherElement(dayKey));
+    }
 
     if (grouped[dayKey].length === 0) {
       const msg = document.createElement("div");
@@ -860,12 +808,6 @@ block.style.setProperty("--day-density", dayIntensity);
           block.appendChild(c);
         });
     }
-      // Weather (Day view) — keep visible but secondary, at the bottom of the day block
-      if (currentView === "day") {
-        const wx = buildDayWeatherElement(dayKey);
-        if (wx) block.appendChild(wx);
-      }
-
 
     // Attendance disclaimer (footnote)
     const disclaimer = document.createElement("div");
