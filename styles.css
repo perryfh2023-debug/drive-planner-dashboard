@@ -62,22 +62,37 @@ body {
 
 .city-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
   width: 100%;
 }
 
+.city-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
 .city-weather {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
   color: #475569;
   font-weight: 500;
   font-size: 0.78rem;
   line-height: 1.1;
   max-width: 56%;
   opacity: 0.85;
+  text-align: right;
+}
+
+.city-weather-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .city-weather img {
@@ -88,16 +103,23 @@ body {
 }
 
 .city-weather-text {
-  /* Allow "Updated ..." to stay visible on mobile without dominating. */
   overflow: hidden;
   text-overflow: ellipsis;
 
-  /* Prefer up to two lines, then clamp. */
+  /* Prefer one line, then clamp. */
   white-space: normal;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
 }
+
+.city-weather-updated {
+  font-size: 0.68rem;
+  color: #64748b;
+  opacity: 0.75;
+  line-height: 1;
+}
+
 
 .views {
   display: flex;
