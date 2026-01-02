@@ -93,27 +93,37 @@ function ensureHeaderWeatherContainer() {
   const header = document.querySelector(".top-bar");
   if (!header) return null;
 
-  let el = header.querySelector(".header-weather");
-  if (el) return el;
-
-  el = document.createElement("div");
-  el.className = "header-weather";
-
   const city = header.querySelector(".city");
-  const nav = header.querySelector("nav.views");
+  if (!city) return null;
 
-  // Prefer: City, Weather, Nav
-  if (city && city.parentElement === header) {
-    // Insert right after city
-    if (city.nextSibling) header.insertBefore(el, city.nextSibling);
-    else header.appendChild(el);
-  } else if (nav) {
-    header.insertBefore(el, nav);
-  } else {
-    header.appendChild(el);
+  // Ensure a top row that can hold City Name + Weather side-by-side
+  let row = city.querySelector(".city-row");
+  const nameEl = city.querySelector(".city-name");
+  const subEl = city.querySelector(".city-sub");
+
+  if (!row) {
+    row = document.createElement("div");
+    row.className = "city-row";
+
+    // Move city-name into row
+    if (nameEl) row.appendChild(nameEl);
+
+    // Insert row at the top of .city
+    city.insertBefore(row, city.firstChild);
+
+    // Make sure city-sub remains below the row (if present)
+    if (subEl) city.appendChild(subEl);
   }
 
-  return el;
+  // Weather container lives inside the city row
+  let wx = row.querySelector(".city-weather");
+  if (wx) return wx;
+
+  wx = document.createElement("div");
+  wx.className = "city-weather";
+  row.appendChild(wx);
+
+  return wx;
 }
 
 function renderHeaderWeather() {
@@ -122,39 +132,46 @@ function renderHeaderWeather() {
 
   el.innerHTML = "";
 
+  // Compact, secondary: show forecast inline next to city name
   if (!weatherData || !weatherData.ok) {
-    const t = document.createElement("div");
-    t.className = "muted";
-    t.textContent = "Weather unavailable";
-    el.appendChild(t);
+    el.textContent = "Wx unavailable";
     return;
   }
 
   const todayKey = getLocalDayKey(new Date());
   const d = getWeatherForDay(todayKey) || weatherData.days?.[0];
+  if (!d) {
+    el.textContent = "Wx unavailable";
+    return;
+  }
 
-  const line = document.createElement("div");
-  line.className = "wx-line";
+  // Tooltip carries the "extras" so we don't steal the show in the header
+  const updatedIso = weatherData.generatedAt || weatherData.updatedAt;
+  const tipParts = [];
+  if (d.shortForecast) tipParts.push(d.shortForecast);
+  if (updatedIso) {
+    try {
+      tipParts.push(
+        "Updated " +
+          new Date(updatedIso).toLocaleTimeString([], {
+            hour: "numeric",
+            minute: "2-digit"
+          })
+      );
+    } catch {}
+  }
+  if (tipParts.length) el.title = tipParts.join(" • ");
 
-  if (d?.icon) {
+  if (d.icon) {
     const img = document.createElement("img");
     img.src = d.icon;
     img.alt = d.shortForecast || "Forecast icon";
     img.loading = "lazy";
-    line.appendChild(img);
+    el.appendChild(img);
   }
 
-  const main = document.createElement("div");
-  main.className = "wx-main";
-
-  const headline = document.createElement("div");
-  headline.className = "wx-headline";
-  headline.textContent =
-    (d?.date === todayKey ? "Today" : "Forecast") +
-    (d?.shortForecast ? ` • ${d.shortForecast}` : "");
-
-  const meta = document.createElement("div");
-  meta.className = "wx-meta";
+  const text = document.createElement("div");
+  text.className = "city-weather-text";
 
   const temps = formatWxTemps(d);
   const precip =
@@ -162,37 +179,19 @@ function renderHeaderWeather() {
       ? `${d.precip}%`
       : "";
 
-  // Keep the header compact: fold the updated time into the meta line.
-  let updatedText = "";
-  const updatedIso = weatherData.generatedAt || weatherData.updatedAt;
-  if (updatedIso) {
-    try {
-      updatedText =
-        "Updated " +
-        new Date(updatedIso).toLocaleTimeString([], {
-          hour: "numeric",
-          minute: "2-digit"
-        });
-    } catch {
-      // ignore
-    }
-  }
+  // Keep it tight: "Cloudy • 36/28 • 6%"
+  const parts = [];
+  if (d.shortForecast) parts.push(d.shortForecast);
+  if (temps) parts.push(temps);
+  if (precip) parts.push(precip);
 
-  meta.textContent =
-    [temps, precip && `Precip ${precip}`, updatedText]
-      .filter(Boolean)
-      .join(" • ") || "";
-
-  main.appendChild(headline);
-  if (meta.textContent) main.appendChild(meta);
-
-  line.appendChild(main);
-  el.appendChild(line);
+  text.textContent = parts.join(" • ");
+  el.appendChild(text);
 }
 
 function buildDayWeatherElement(dayKey) {
   const wrap = document.createElement("div");
-  wrap.className = "weather-day";
+  wrap.className = "weather-day weather-secondary";
 
   const d = getWeatherForDay(dayKey);
 
@@ -484,17 +483,18 @@ function renderWeekView() {
     c.textContent = `${summary.eventCount} events`;
     block.appendChild(c);
 
-    const wxMini = buildMiniWeatherElement(key);
-    if (wxMini) {
-      block.appendChild(wxMini);
-    }
-
     if (summary.attendanceSum > 0) {
       const a = document.createElement("div");
       a.className = "muted";
       a.textContent =
         `Estimated attendance: ~${formatAttendance(summary.attendanceSum)}`;
       block.appendChild(a);
+    }
+
+    
+    const wxMini = buildMiniWeatherElement(key);
+    if (wxMini) {
+      block.appendChild(wxMini);
     }
 
     block.addEventListener("click", () => {
@@ -725,11 +725,6 @@ block.style.setProperty("--day-density", dayIntensity);
     h.textContent = formatDayKey(dayKey);
     block.appendChild(h);
 
-    // Weather card (Day view only)
-    if (currentView === "day") {
-      block.appendChild(buildDayWeatherElement(dayKey));
-    }
-
     if (grouped[dayKey].length === 0) {
       const msg = document.createElement("div");
       msg.className = "muted";
@@ -840,6 +835,12 @@ block.style.setProperty("--day-density", dayIntensity);
           block.appendChild(c);
         });
     }
+      // Weather (Day view) — keep visible but secondary, at the bottom of the day block
+      if (currentView === "day") {
+        const wx = buildDayWeatherElement(dayKey);
+        if (wx) block.appendChild(wx);
+      }
+
 
     // Attendance disclaimer (footnote)
     const disclaimer = document.createElement("div");
