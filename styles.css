@@ -106,6 +106,8 @@ body {
   font-size: 0.8rem;
   font-weight: 500;
   color: #475569; /* muted */
+}
+
 
 
 /* =========================================================
@@ -168,7 +170,6 @@ body {
   color: #64748b;
   opacity: 0.9;
 }
-}
 
 /* =========================================================
    WEEK + DAY VIEW CARDS
@@ -226,7 +227,7 @@ body {
   background: #e0e5eb;
 }
 
-.day {
+.day:not(.week-day) {
   background: #eef1f5;
   border-radius: 10px;
   padding: 10px;
