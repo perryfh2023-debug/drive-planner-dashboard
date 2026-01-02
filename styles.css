@@ -56,7 +56,7 @@ body {
 .city {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   margin: 0;
 }
 
@@ -74,9 +74,10 @@ body {
   gap: 6px;
   color: #475569;
   font-weight: 500;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   line-height: 1.1;
   max-width: 56%;
+  opacity: 0.85;
 }
 
 .city-weather img {
@@ -127,25 +128,30 @@ body {
 
 /* ================================
    CITY HEADER TYPOGRAPHY
+   (City stays the star; weather is secondary)
    ================================ */
 
-.top-bar .city {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
 .top-bar .city-name {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.35rem;
+  font-weight: 700;
   color: #0f172a;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .top-bar .city-sub {
   font-size: 0.8rem;
   font-weight: 500;
   color: #475569; /* muted */
+  line-height: 1.1;
+  margin-top: -2px; /* tighten the Saint Louis / Metro Area gap */
+}
+
+@media (max-width: 520px) {
+  .top-bar .city-name {
+    font-size: 1.45rem;
+  }
 }
 
 /* =========================================================
@@ -153,22 +159,23 @@ body {
    ========================================================= */
 
 .week-day {
-  background: linear-gradient(
-    to bottom,
-    rgba(47, 111, 237, calc(0.14 + 0.65 * var(--density, 0))),
-    rgba(47, 111, 237, calc(0.05 + 0.25 * var(--density, 0)))
-  );
+  /* Mobile-friendly "month-like" shading: starts bottom-left and fades diagonally */
+  background:
+    radial-gradient(
+      140% 120% at 0% 100%,
+      rgba(47, 111, 237, calc(0.18 + 0.78 * var(--density, 0))) 0%,
+      rgba(47, 111, 237, calc(0.08 + 0.36 * var(--density, 0))) 45%,
+      rgba(47, 111, 237, 0) 72%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(238, 241, 245, 0.35) 0%,
+      rgba(238, 241, 245, 0.85) 58%,
+      #eef1f5 100%
+    );
   border: 1px solid rgba(15, 23, 42, 0.14);
 }
-/* Week cards only (they're .day.clickable) */
-.day.clickable{
-  background: linear-gradient(
-    to right,
-    rgba(47,111,237, calc(0.12 + 0.60 * var(--density, 0))) 0%,
-    rgba(47,111,237, calc(0.06 + 0.25 * var(--density, 0))) 45%,
-    #eef1f5 100%
-  );
-}
+
 
 /* =========================================================
    VIEW NAVIGATION (IN-VIEW)
@@ -215,6 +222,21 @@ body {
 .day h2 {
   margin: 0 0 4px 0;
   font-size: 1rem;
+}
+
+/* Week view hierarchy: event count + attendance first, weather second */
+.week-primary {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-top: 2px;
+}
+
+.week-secondary {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  opacity: 0.9;
 }
 
 .card {
@@ -691,13 +713,13 @@ body {
    ========================================================= */
 
 .wx-mini {
-  opacity: 0.85;
+  opacity: 0.72;
   margin-top: 6px;
   display: flex;
   align-items: center;
   gap: 8px;
   color: #334155;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
 }
 
 .wx-mini img {
