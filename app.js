@@ -479,13 +479,15 @@ function renderWeekView() {
     block.appendChild(h);
 
     const c = document.createElement("div");
-    c.className = "muted";
+    // Primary stat: keep readable even on mobile.
+    c.className = "week-primary";
     c.textContent = `${summary.eventCount} events`;
     block.appendChild(c);
 
     if (summary.attendanceSum > 0) {
       const a = document.createElement("div");
-      a.className = "muted";
+      // Secondary stat: still visible, but less dominant than event count.
+      a.className = "week-secondary";
       a.textContent =
         `Estimated attendance: ~${formatAttendance(summary.attendanceSum)}`;
       block.appendChild(a);
@@ -859,22 +861,5 @@ block.style.setProperty("--day-density", dayIntensity);
 
 loadEvents();
 loadWeather();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
