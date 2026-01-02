@@ -32,6 +32,10 @@ body {
   padding: 12px;
   border-bottom: 1px solid #94a3b8;
 
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   /* OPAQUE, CLAMPED HEADER */
   background: linear-gradient(
     to bottom,
@@ -50,14 +54,52 @@ body {
 }
 
 .city {
-  font-weight: 600;
-  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+
+.city-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.city-weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.82rem;
+  line-height: 1.1;
+  max-width: 56%;
+}
+
+.city-weather img {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  flex: 0 0 auto;
+}
+
+.city-weather-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .views {
   display: flex;
   gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
 }
+
 
 .views button {
   padding: 6px 10px;
@@ -94,7 +136,7 @@ body {
 }
 
 .top-bar .city-name {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #0f172a;
   letter-spacing: 0.01em;
@@ -648,43 +690,8 @@ body {
    WEATHER
    ========================================================= */
 
-.header-weather {
-  margin-bottom: 10px;
-  display: inline-flex;
-  align-items: center;
-  padding: 3px;
-  border-radius: 10px;
-  border: none;
-  background: rgba(255, 255, 255, 0.25);
-  max-width: 100%;
-}
-
-.header-weather .wx-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-weather img {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-}
-
-.header-weather .wx-headline {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #0f172a;
-  line-height: 1.1;
-}
-
-.header-weather .wx-meta {
-  margin-top: 1px;
-  font-size: 0.8rem;
-  color: #334155;
-}
-
 .wx-mini {
+  opacity: 0.85;
   margin-top: 6px;
   display: flex;
   align-items: center;
@@ -734,3 +741,26 @@ body {
   font-size: 0.8rem;
   color: #334155;
 }
+
+/* Day view weather: present but secondary */
+.weather-day.weather-secondary {
+  margin-top: 10px;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+.weather-day.weather-secondary img {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+}
+
+.weather-day.weather-secondary .wx-title {
+  font-size: 0.82rem;
+}
+
+.weather-day.weather-secondary .wx-details {
+  font-size: 0.75rem;
+}
+
