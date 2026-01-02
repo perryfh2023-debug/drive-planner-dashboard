@@ -32,10 +32,6 @@ body {
   padding: 12px;
   border-bottom: 1px solid #94a3b8;
 
-
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   /* OPAQUE, CLAMPED HEADER */
   background: linear-gradient(
     to bottom,
@@ -54,81 +50,14 @@ body {
 }
 
 .city {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  margin: 0;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
-
-.city-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-}
-
-.city-left {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  min-width: 0;
-}
-
-.city-weather {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  color: #475569;
-  font-weight: 500;
-  font-size: 0.78rem;
-  line-height: 1.1;
-  max-width: 56%;
-  opacity: 0.85;
-  text-align: right;
-}
-
-.city-weather-main {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.city-weather img {
-  width: 18px;
-  height: 18px;
-  border-radius: 6px;
-  flex: 0 0 auto;
-}
-
-.city-weather-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  /* Prefer one line, then clamp. */
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-}
-
-.city-weather-updated {
-  font-size: 0.68rem;
-  color: #64748b;
-  opacity: 0.75;
-  line-height: 1;
-}
-
 
 .views {
   display: flex;
   gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  width: 100%;
 }
-
 
 .views button {
   padding: 6px 10px;
@@ -156,30 +85,25 @@ body {
 
 /* ================================
    CITY HEADER TYPOGRAPHY
-   (City stays the star; weather is secondary)
    ================================ */
 
+.top-bar .city {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 .top-bar .city-name {
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: #0f172a;
-  letter-spacing: 0.02em;
-  line-height: 1.1;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.01em;
 }
 
 .top-bar .city-sub {
   font-size: 0.8rem;
   font-weight: 500;
   color: #475569; /* muted */
-  line-height: 1.1;
-  margin-top: -2px; /* tighten the Saint Louis / Metro Area gap */
-}
-
-@media (max-width: 520px) {
-  .top-bar .city-name {
-    font-size: 1.45rem;
-  }
 }
 
 /* =========================================================
@@ -187,23 +111,22 @@ body {
    ========================================================= */
 
 .week-day {
-  /* Mobile-friendly "month-like" shading: starts bottom-left and fades diagonally */
-  background:
-    radial-gradient(
-      140% 120% at 0% 100%,
-      rgba(47, 111, 237, calc(0.18 + 0.78 * var(--density, 0))) 0%,
-      rgba(47, 111, 237, calc(0.08 + 0.36 * var(--density, 0))) 45%,
-      rgba(47, 111, 237, 0) 72%
-    ),
-    linear-gradient(
-      135deg,
-      rgba(238, 241, 245, 0.35) 0%,
-      rgba(238, 241, 245, 0.85) 58%,
-      #eef1f5 100%
-    );
+  background: linear-gradient(
+    to bottom,
+    rgba(47, 111, 237, calc(0.14 + 0.65 * var(--density, 0))),
+    rgba(47, 111, 237, calc(0.05 + 0.25 * var(--density, 0)))
+  );
   border: 1px solid rgba(15, 23, 42, 0.14);
 }
-
+/* Week cards only (they're .day.clickable) */
+.day.clickable{
+  background: linear-gradient(
+    to right,
+    rgba(47,111,237, calc(0.12 + 0.60 * var(--density, 0))) 0%,
+    rgba(47,111,237, calc(0.06 + 0.25 * var(--density, 0))) 45%,
+    #eef1f5 100%
+  );
+}
 
 /* =========================================================
    VIEW NAVIGATION (IN-VIEW)
@@ -243,24 +166,6 @@ body {
   );
 }
 
-
-/* Week cards should use the "month-like" diagonal bloom (not the left bar). */
-.day.week-day {
-  background:
-    radial-gradient(
-      140% 120% at 0% 100%,
-      rgba(47, 111, 237, calc(0.18 + 0.78 * var(--density, 0))) 0%,
-      rgba(47, 111, 237, calc(0.08 + 0.36 * var(--density, 0))) 45%,
-      rgba(47, 111, 237, 0) 72%
-    ),
-    linear-gradient(
-      135deg,
-      rgba(238, 241, 245, 0.35) 0%,
-      rgba(238, 241, 245, 0.88) 58%,
-      #eef1f5 100%
-    );
-}
-
 .day.clickable {
   cursor: pointer;
 }
@@ -268,21 +173,6 @@ body {
 .day h2 {
   margin: 0 0 4px 0;
   font-size: 1rem;
-}
-
-/* Week view hierarchy: event count + attendance first, weather second */
-.week-primary {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #0f172a;
-  margin-top: 2px;
-}
-
-.week-secondary {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #334155;
-  opacity: 0.9;
 }
 
 .card {
@@ -335,6 +225,13 @@ body {
 }
 
 /* Day number */
+.month-day .date-label {
+  font-size: 0.80rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
 .month-day .day-label {
   font-size: 0.75rem;
   font-weight: 600;
@@ -370,10 +267,11 @@ body {
    ========================================================= */
 
 .month-panel {
-  background: #e1e6ee;            /* noticeably darker than page */
+  background: #e1e6ee;
   border: 1px solid #b8c0cc;
   border-radius: 12px;
   padding: 12px;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.10);
 }
 
 /* Month header band */
@@ -397,17 +295,29 @@ body {
 
 /* Stronger header text */
 .month-header .title {
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 4px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 2px;
+  letter-spacing: 0.01em;
+}
+
+.month-header .subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #334155;
+  opacity: 0.85;
+  margin-bottom: 8px;
 }
 
 /* Weekday labels */
 .month-header .weekday {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #374151;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
 }
 
 /* Make every week-row grid (and the weekday header grid) use stable tracks */
@@ -422,6 +332,11 @@ body {
 }
 
 /* Optional: prevent nowrap text from visually spilling */
+.month-day .metric {
+  font-size: 0.70rem;
+  line-height: 1.1;
+}
+
 .month-day .muted {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -758,27 +673,43 @@ body {
    WEATHER
    ========================================================= */
 
-.wx-mini {
-  opacity: 0.72;
-  margin-top: 6px;
+.header-weather {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(238, 241, 245, 0.55);
+}
+
+.header-weather .wx-line {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+}
+
+.header-weather img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.header-weather .wx-headline {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.header-weather .wx-meta {
+  margin-top: 2px;
+  font-size: 0.8rem;
   color: #334155;
-  font-size: 0.74rem;
 }
 
-.wx-mini img {
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  flex: 0 0 auto;
-}
-
-.wx-mini-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.header-weather .wx-updated {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #475569;
 }
 
 .weather-day {
@@ -810,25 +741,8 @@ body {
   color: #334155;
 }
 
-/* Day view weather: present but secondary */
-.weather-day.weather-secondary {
-  margin-top: 10px;
-  padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.28);
-  border: 1px solid rgba(15, 23, 42, 0.10);
-}
 
-.weather-day.weather-secondary img {
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
+.month-legend {
+  font-size: 0.7rem;
+  margin-top: 8px;
 }
-
-.weather-day.weather-secondary .wx-title {
-  font-size: 0.82rem;
-}
-
-.weather-day.weather-secondary .wx-details {
-  font-size: 0.75rem;
-}
-
