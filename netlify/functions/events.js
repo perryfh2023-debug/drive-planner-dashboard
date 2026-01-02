@@ -96,7 +96,7 @@ function mapToAppEvent(makeItem) {
     venue: d.venue_name_raw || "",
     address: buildAddress(d),
     attendanceEstimate: String(attendanceEstimate ?? ""),
-    link: d.source_url || "", // if you add it later, it will start showing automatically
+    link: d.Link || d.link || d.source_url || d.sourceUrl || "",
     notes: notes || "",
   };
 }
