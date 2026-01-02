@@ -641,3 +641,77 @@ body {
 
 
 
+
+
+
+/* =========================================================
+   WEATHER
+   ========================================================= */
+
+.header-weather {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: rgba(238, 241, 245, 0.55);
+}
+
+.header-weather .wx-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-weather img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.header-weather .wx-headline {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.header-weather .wx-meta {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: #334155;
+}
+
+.header-weather .wx-updated {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.weather-day {
+  margin: 8px 0 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: #e8edf4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.weather-day img {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+}
+
+.weather-day .wx-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.weather-day .wx-details {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: #334155;
+}
