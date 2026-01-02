@@ -609,14 +609,14 @@ function renderMonthView() {
       if (summary.eventCount > 0) {
         const ec = document.createElement("div");
         ec.className = "muted metric";
-        ec.textContent = `EC ${summary.eventCount}`;
+        ec.textContent = `EC — ${summary.eventCount}`;
         cell.appendChild(ec);
       }
 
       if (summary.attendanceSum > 0) {
         const ae = document.createElement("div");
         ae.className = "muted metric";
-        ae.textContent = `EA ~${formatAttendance(summary.attendanceSum)}`;
+        ae.textContent = `EA — ~${formatAttendance(summary.attendanceSum)}`;
         cell.appendChild(ae);
       }
 
