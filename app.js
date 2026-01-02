@@ -91,29 +91,39 @@ function formatWxTemps(d) {
   return "";
 }
 
-function ensureHeaderWeatherContainer() {
+function ensureHeaderTopline() {
   const header = document.querySelector(".top-bar");
   if (!header) return null;
 
-  let el = header.querySelector(".header-weather");
+  let top = header.querySelector(".header-topline");
+  const city = header.querySelector(".city");
+  const nav = header.querySelector("nav.views");
+
+  if (!top) {
+    top = document.createElement("div");
+    top.className = "header-topline";
+
+    if (nav) header.insertBefore(top, nav);
+    else header.insertBefore(top, header.firstChild);
+  }
+
+  if (city && city.parentElement !== top) {
+    top.insertBefore(city, top.firstChild);
+  }
+
+  return top;
+}
+
+function ensureHeaderWeatherContainer() {
+  const top = ensureHeaderTopline();
+  if (!top) return null;
+
+  let el = top.querySelector(".header-weather");
   if (el) return el;
 
   el = document.createElement("div");
   el.className = "header-weather";
-
-  const city = header.querySelector(".city");
-  const nav = header.querySelector("nav.views");
-
-  // Prefer: City, Weather, Nav
-  if (city && city.parentElement === header) {
-    // Insert right after city
-    if (city.nextSibling) header.insertBefore(el, city.nextSibling);
-    else header.appendChild(el);
-  } else if (nav) {
-    header.insertBefore(el, nav);
-  } else {
-    header.appendChild(el);
-  }
+  top.appendChild(el);
 
   return el;
 }
@@ -245,6 +255,36 @@ function buildDayWeatherElement(dayKey) {
   wrap.appendChild(body);
   return wrap;
 }
+
+
+function buildMiniWeatherLine(dayKey) {
+  const d = getWeatherForDay(dayKey);
+  if (!weatherData || !weatherData.ok || !d) return null;
+
+  const row = document.createElement("div");
+  row.className = "wx-mini muted";
+
+  if (d.icon) {
+    const img = document.createElement("img");
+    img.src = d.icon;
+    img.alt = d.shortForecast || "Forecast icon";
+    img.loading = "lazy";
+    row.appendChild(img);
+  }
+
+  const temps = formatWxTemps(d);
+  const precip =
+    typeof d?.precip === "number" || typeof d?.precip === "string"
+      ? `${d.precip}%`
+      : "";
+
+  const text = document.createElement("span");
+  text.textContent = [temps, precip].filter(Boolean).join(" • ");
+  row.appendChild(text);
+
+  return row;
+}
+
 
 
 
@@ -460,6 +500,10 @@ function renderWeekView() {
       block.appendChild(a);
     }
 
+
+    const wx = buildMiniWeatherLine(key);
+    if (wx) block.appendChild(wx);
+
     block.addEventListener("click", () => {
       selectedDayKey = key;
       currentView = "day";
@@ -500,14 +544,18 @@ function renderMonthView() {
   const title = document.createElement("div");
   title.className = "title";
   title.textContent = "Looking ahead";
-  header.appendChild(title);
 
   const subtitle = document.createElement("div");
   subtitle.className = "subtitle";
   subtitle.textContent =
     `${today.toLocaleDateString(undefined, { month: "short", day: "numeric" })} → ` +
     `${gridEnd.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
-  header.appendChild(subtitle);
+
+  const headline = document.createElement("div");
+  headline.className = "month-headline-row";
+  headline.appendChild(title);
+  headline.appendChild(subtitle);
+  header.appendChild(headline);
 
   const weekdayRow = document.createElement("div");
   weekdayRow.className = "week-days";
@@ -561,14 +609,14 @@ function renderMonthView() {
       if (summary.eventCount > 0) {
         const ec = document.createElement("div");
         ec.className = "muted metric";
-        ec.textContent = `ec ${summary.eventCount}`;
+        ec.textContent = `EC ${summary.eventCount}`;
         cell.appendChild(ec);
       }
 
       if (summary.attendanceSum > 0) {
         const ae = document.createElement("div");
         ae.className = "muted metric";
-        ae.textContent = `ae ~${formatAttendance(summary.attendanceSum)}`;
+        ae.textContent = `EA ~${formatAttendance(summary.attendanceSum)}`;
         cell.appendChild(ae);
       }
 
@@ -592,7 +640,7 @@ function renderMonthView() {
   /* ---------- Legend ---------- */
   const legend = document.createElement("div");
   legend.className = "muted month-legend";
-  legend.textContent = "ec = event count • ae = estimated attendance";
+  legend.textContent = "EC = event count • EA = estimated attendance";
   panel.appendChild(legend);
 
   applyTopBarIntensity(0);
@@ -692,11 +740,6 @@ block.style.setProperty("--day-density", dayIntensity);
     const h = document.createElement("h2");
     h.textContent = formatDayKey(dayKey);
     block.appendChild(h);
-
-    // Weather card (Day view only)
-    if (currentView === "day") {
-      block.appendChild(buildDayWeatherElement(dayKey));
-    }
 
     if (grouped[dayKey].length === 0) {
       const msg = document.createElement("div");
@@ -815,6 +858,12 @@ block.style.setProperty("--day-density", dayIntensity);
     disclaimer.textContent =
       "Attendance estimates are based on publicly available data.";
     block.appendChild(disclaimer);
+
+    if (currentView === "day") {
+      const wx = buildDayWeatherElement(dayKey);
+      wx.classList.add("wx-bottom");
+      block.appendChild(wx);
+    }
 
     app.appendChild(block);
   });
