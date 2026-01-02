@@ -96,35 +96,38 @@ function ensureHeaderWeatherContainer() {
   const city = header.querySelector(".city");
   if (!city) return null;
 
-  // Ensure a top row that can hold City Name + Weather side-by-side
+  // Build a two-column header row:
+  // [ City + Subtitle ]   [ Weather + Updated ]
   let row = city.querySelector(".city-row");
-  const nameEl = city.querySelector(".city-name");
-  const subEl = city.querySelector(".city-sub");
-
   if (!row) {
     row = document.createElement("div");
     row.className = "city-row";
-
-    // Move city-name into row
-    if (nameEl) row.appendChild(nameEl);
-
-    // Insert row at the top of .city
     city.insertBefore(row, city.firstChild);
-
-    // Make sure city-sub remains below the row (if present)
-    if (subEl) city.appendChild(subEl);
   }
 
-  // Weather container lives inside the city row
-  let wx = row.querySelector(".city-weather");
-  if (wx) return wx;
+  let left = row.querySelector(".city-left");
+  if (!left) {
+    left = document.createElement("div");
+    left.className = "city-left";
+    row.insertBefore(left, row.firstChild);
+  }
 
-  wx = document.createElement("div");
-  wx.className = "city-weather";
-  row.appendChild(wx);
+  const nameEl = city.querySelector(".city-name");
+  const subEl = city.querySelector(".city-sub");
+
+  if (nameEl && nameEl.parentElement !== left) left.appendChild(nameEl);
+  if (subEl && subEl.parentElement !== left) left.appendChild(subEl);
+
+  let wx = row.querySelector(".city-weather");
+  if (!wx) {
+    wx = document.createElement("div");
+    wx.className = "city-weather";
+    row.appendChild(wx);
+  }
 
   return wx;
 }
+
 
 function renderHeaderWeather() {
   const el = ensureHeaderWeatherContainer();
@@ -162,46 +165,52 @@ function renderHeaderWeather() {
   }
   if (tipParts.length) el.title = tipParts.join(" • ");
 
-  if (d.icon) {
-    const img = document.createElement("img");
-    img.src = d.icon;
-    img.alt = d.shortForecast || "Forecast icon";
-    img.loading = "lazy";
-    el.appendChild(img);
-  }
-
-  const text = document.createElement("div");
-  text.className = "city-weather-text";
-
   const temps = formatWxTemps(d);
   const precip =
     typeof d?.precip === "number" || typeof d?.precip === "string"
       ? `${d.precip}%`
       : "";
 
-  // Keep it tight: "Cloudy • 36/28 • 6%"
+  // Main line: "Cloudy • 36/28 • 6%"
   const parts = [];
   if (d.shortForecast) parts.push(d.shortForecast);
   if (temps) parts.push(temps);
   if (precip) parts.push(precip);
 
+  const main = document.createElement("div");
+  main.className = "city-weather-main";
 
-  // Add "last updated" in-header (subtle, but visible on mobile).
-  let updatedText = "";
+  if (d.icon) {
+    const img = document.createElement("img");
+    img.src = d.icon;
+    img.alt = d.shortForecast || "Forecast icon";
+    img.loading = "lazy";
+    main.appendChild(img);
+  }
+
+  const text = document.createElement("div");
+  text.className = "city-weather-text";
+  text.textContent = parts.join(" • ");
+  main.appendChild(text);
+
+  el.appendChild(main);
+
+  // Updated line (tiny, under forecast)
   if (updatedIso) {
     try {
-      updatedText =
+      const updated = document.createElement("div");
+      updated.className = "city-weather-updated";
+      updated.textContent =
         "Updated " +
         new Date(updatedIso).toLocaleTimeString([], {
           hour: "numeric",
           minute: "2-digit"
         });
+      el.appendChild(updated);
     } catch {}
   }
-  if (updatedText) parts.push(updatedText);
-  text.textContent = parts.join(" • ");
-  el.appendChild(text);
 }
+
 
 function buildDayWeatherElement(dayKey) {
   const wrap = document.createElement("div");
