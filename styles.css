@@ -96,19 +96,19 @@ body {
 }
 
 .top-bar .city-name {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: #0f172a;
   letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 }
 
 .top-bar .city-sub {
   font-size: 0.8rem;
   font-weight: 500;
   color: #475569; /* muted */
+
 }
-
-
 
 /* =========================================================
    HEADER TOP LINE (CITY + WEATHER)
@@ -175,13 +175,29 @@ body {
    WEEK + DAY VIEW CARDS
    ========================================================= */
 
+.stat-primary {
+  margin-top: 2px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.stat-secondary {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  opacity: 0.92;
+}
+
 .week-day {
-  background: linear-gradient(
-    to bottom,
-    rgba(47, 111, 237, calc(0.14 + 0.65 * var(--density, 0))),
-    rgba(47, 111, 237, calc(0.05 + 0.25 * var(--density, 0)))
-  );
   border: 1px solid rgba(15, 23, 42, 0.14);
+  background: radial-gradient(
+    circle at 0% 100%,
+    rgba(47, 111, 237, calc(0.08 + 0.62 * var(--density, 0))) 0%,
+    rgba(47, 111, 237, calc(0.03 + 0.28 * var(--density, 0))) 55%,
+    #eef1f5 78%
+  );
 }
 /* Week cards only (they're .day.clickable) */
 .day.clickable:not(.week-day){
@@ -227,19 +243,22 @@ body {
   background: #e0e5eb;
 }
 
-.day:not(.week-day) {
+.day {
   background: #eef1f5;
   border-radius: 10px;
   padding: 10px;
   margin-bottom: 12px;
+}
 
-  /* Left accent stripe via intensity */
+/* Day-view (and any non-week cards): left accent stripe via day intensity */
+.day:not(.week-day) {
   background: linear-gradient(
     to right,
-    rgba(47, 111, 237, calc(0.12 + 0.55 * var(--density, 0))) 6px,
+    rgba(47, 111, 237, calc(0.12 + 0.55 * var(--day-density, var(--density, 0)))) 6px,
     #eef1f5 6px
   );
 }
+
 
 .day.clickable {
   cursor: pointer;
