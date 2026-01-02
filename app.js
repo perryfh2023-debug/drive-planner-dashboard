@@ -185,6 +185,20 @@ function renderHeaderWeather() {
   if (temps) parts.push(temps);
   if (precip) parts.push(precip);
 
+
+  // Add "last updated" in-header (subtle, but visible on mobile).
+  let updatedText = "";
+  if (updatedIso) {
+    try {
+      updatedText =
+        "Updated " +
+        new Date(updatedIso).toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit"
+        });
+    } catch {}
+  }
+  if (updatedText) parts.push(updatedText);
   text.textContent = parts.join(" • ");
   el.appendChild(text);
 }
@@ -861,5 +875,22 @@ block.style.setProperty("--day-density", dayIntensity);
 
 loadEvents();
 loadWeather();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
