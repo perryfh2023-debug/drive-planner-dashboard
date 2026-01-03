@@ -1,141 +1,150 @@
 /* =========================================================
+   Drive Planner Pro Dashboard — Blue Steel v1
+   Drop-in styles.css replacement
+   ---------------------------------------------------------
+   Change colors ONCE here (tokens) to theme the whole app.
+   ========================================================= */
+
+:root {
+  /* ---------- Brand / Core ---------- */
+  --primary: #1F4B8F;
+  --primary-pressed: #163A6B;
+  --primary-rgb: 31, 75, 143;
+
+  --accent-steel: #2FA7B5; /* sparing */
+
+  /* ---------- Neutrals ---------- */
+  --ink: #0F172A;
+  --ink-muted: #475569;
+  --ink-soft: #64748B;
+
+  /* ---------- Surfaces ---------- */
+  --page-bg: #F6F8FC;
+  --surface: #FFFFFF;
+  --surface-tint: #EAF1FB;
+  --surface-tint-2: #DFEAF7;
+
+  --border: #D6E1F2;
+
+  /* ---------- Effects ---------- */
+  --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.10);
+
+  /* ---------- Shape ---------- */
+  --radius-card: 16px;
+  --radius-panel: 14px;
+  --radius-control: 12px;
+  --radius-chip: 999px;
+
+  /* ---------- Header Gradient ---------- */
+  --header-top: #B9CDE7;
+  --header-bottom: #96B4D6;
+
+  /* ---------- Link ---------- */
+  --link: #1F4B8F;
+  --link-hover: #163A6B;
+}
+
+/* =========================================================
    BASE RESET / CANVAS
    ========================================================= */
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
 
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
-  background: #d6dbe2;
-  color: #0f172a;
+  background: var(--page-bg);
+  color: var(--ink);
 }
 
 #app {
   padding: 12px;
 }
 
-
 /* =========================================================
    TOP BAR (GLOBAL HEADER)
    ========================================================= */
 
-/* Single source of truth for header + intensity */
 .top-bar {
   position: sticky;
   top: 0;
   z-index: 100;
 
   padding: 12px;
-  border-bottom: 1px solid #94a3b8;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.18);
 
-  /* OPAQUE, CLAMPED HEADER */
-  background: linear-gradient(
-    to bottom,
-   rgb(170, 190, 220),
-    rgb(150, 175, 210)
-  );
+  background: linear-gradient(to bottom, var(--header-top), var(--header-bottom));
+  box-shadow: 0 2px 14px rgba(15, 23, 42, 0.10);
+
+  /* Needed for intensity overlay */
+  position: sticky;
 }
 
-/* Intensity overlay (controlled, non-transparent) */
+/* Intensity overlay (driven by --density from JS) */
 .top-bar::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(47, 111, 237, calc(0.12 * var(--density, 0)));
+  background: rgba(var(--primary-rgb), calc(0.12 * var(--density, 0)));
   pointer-events: none;
 }
 
-.city {
-  font-weight: 600;
-  margin-bottom: 0;
-}
-
-.views {
-  display: flex;
-  gap: 8px;
-}
-
-.views button {
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid #aeb4be;
-  background: #eef1f5;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.views button.active {
-  background: #2f6fed;
-  color: #ffffff;
-  border-color: #2f6fed;
-}
-
-/* ================================
-   HEADER HARD STOP (SEAM)
-   ================================ */
-
-/* Crisp divider between header and content */
-.top-bar {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.22);
-}
-
-/* ================================
-   CITY HEADER TYPOGRAPHY
-   ================================ */
-
-.top-bar .city {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  margin-bottom: 0;
-}
-
-.top-bar .city-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
-  letter-spacing: 0.01em;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-}
-
-.top-bar .city-sub {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #475569; /* muted */
-
-}
-
-/* =========================================================
-   HEADER TOP LINE (CITY + WEATHER)
-   ========================================================= */
-
+/* If you use city + weather on one top line, keep it above overlay */
 .header-topline {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 14px;
   position: relative;
-  z-index: 1; /* above intensity overlay */
+  z-index: 1;
   margin-bottom: 8px;
 }
 
-/* Weather lives on the top line, but stays secondary */
+/* City block */
+.top-bar .city {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-bottom: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.top-bar .city-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+}
+
+.top-bar .city-sub {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+/* Header weather (optional) */
 .header-weather {
   margin: 0;
   padding: 0;
   border: none;
   background: transparent;
   text-align: right;
+
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-start;
+
   max-width: 48%;
+  position: relative;
+  z-index: 1;
 }
 
 .header-weather .wx-line {
@@ -148,27 +157,94 @@ body {
 .header-weather img {
   width: 18px;
   height: 18px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .header-weather .wx-headline {
   font-size: 0.85rem;
-  font-weight: 600;
-  color: #334155;
+  font-weight: 700;
+  color: rgba(15, 23, 42, 0.78);
   line-height: 1.1;
 }
 
 .header-weather .wx-meta {
   margin-top: 1px;
   font-size: 0.78rem;
-  color: #475569;
+  color: var(--ink-muted);
 }
 
 .header-weather .wx-updated {
   margin-top: 2px;
   font-size: 0.68rem;
-  color: #64748b;
+  color: var(--ink-soft);
   opacity: 0.9;
+}
+
+/* =========================================================
+   HEADER VIEW SELECTOR — SEGMENTED CONTROL
+   ========================================================= */
+
+.top-bar .views {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  gap: 0;
+  padding: 3px;
+
+  background: rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: var(--radius-control);
+
+  position: relative;
+  z-index: 1;
+}
+
+.top-bar .views button {
+  background: transparent;
+  border: none;
+
+  padding: 7px 12px;
+  font-weight: 650;
+  color: rgba(15, 23, 42, 0.82);
+
+  border-radius: calc(var(--radius-control) - 4px);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.top-bar .views button.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+}
+
+.top-bar .views button:not(.active):hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* =========================================================
+   VIEW NAVIGATION (IN-VIEW) — back button, etc.
+   ========================================================= */
+
+.nav-link {
+  display: inline-block;
+  margin: 6px 0 10px 0;
+  padding: 8px 12px;
+
+  font-size: 0.82rem;
+  font-weight: 650;
+
+  background: var(--surface-tint);
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 10px;
+
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  filter: brightness(0.98);
+  background: var(--surface-tint-2);
 }
 
 /* =========================================================
@@ -178,231 +254,253 @@ body {
 .stat-primary {
   margin-top: 2px;
   font-size: 0.86rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 800;
+  color: var(--ink);
 }
 
 .stat-secondary {
   margin-top: 2px;
   font-size: 0.8rem;
-  font-weight: 500;
-  color: #334155;
+  font-weight: 600;
+  color: rgba(15, 23, 42, 0.72);
   opacity: 0.92;
 }
 
+/* Base day container */
+.day {
+  border-radius: var(--radius-panel);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+}
+
+/* Day view base surface */
+.day:not(.week-day) {
+  background: var(--surface-tint);
+  box-shadow: none;
+  position: relative;
+}
+
+/* Day title */
+.day h2 {
+  margin: 2px 0 6px 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--ink);
+}
+
+/* Day summary lines */
+.day:not(.week-day) > .muted {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  line-height: 1.3;
+}
+
+/* Pull summary closer */
+.day:not(.week-day) > .muted + .muted {
+  margin-top: -2px;
+}
+
+/* Left edge indicator driven by attendance (day view) */
+.day:not(.week-day)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 6px;
+  border-radius: 6px;
+  background: rgba(var(--primary-rgb), calc(0.30 + 0.75 * var(--day-density, 0)));
+}
+
+/* Week cards (On the Horizon) */
 .week-day {
   border: 1px solid rgba(15, 23, 42, 0.14);
-  background: radial-gradient(
-    circle at 0% 100%,
-    rgba(47, 111, 237, calc(0.08 + 0.62 * var(--density, 0))) 0%,
-    rgba(47, 111, 237, calc(0.03 + 0.28 * var(--density, 0))) 55%,
-    #eef1f5 78%
-  );
-}
-/* Week cards only (they're .day.clickable) */
-.day.clickable:not(.week-day){
+
+  /* Diagonal bloom intensity */
   background: linear-gradient(
-    to right,
-    rgba(47,111,237, calc(0.12 + 0.60 * var(--density, 0))) 0%,
-    rgba(47,111,237, calc(0.06 + 0.25 * var(--density, 0))) 45%,
-    #eef1f5 100%
+    135deg,
+    rgba(var(--primary-rgb), calc(0.08 + 0.55 * var(--density, 0))) 0%,
+    rgba(var(--primary-rgb), calc(0.04 + 0.25 * var(--density, 0))) 55%,
+    var(--surface-tint) 100%
   );
 }
 
-/* Week cards: month-like diagonal intensity bloom (no edge bar) */
-.day.week-day {
+/* Week cards only (they're .day.clickable but not .week-day?) */
+.day.clickable:not(.week-day) {
   background: linear-gradient(
-    135deg,
-    rgba(47, 111, 237, calc(0.08 + 0.55 * var(--density, 0))) 0%,
-    rgba(47, 111, 237, calc(0.04 + 0.25 * var(--density, 0))) 55%,
-    #eef1f5 100%
+    to right,
+    rgba(var(--primary-rgb), calc(0.12 + 0.60 * var(--density, 0))) 0%,
+    rgba(var(--primary-rgb), calc(0.06 + 0.25 * var(--density, 0))) 45%,
+    var(--surface-tint) 100%
   );
+}
+
+/* Clickable affordance */
+.day.clickable,
+.month-day.clickable {
+  cursor: pointer;
+}
+
+.day.clickable:hover,
+.month-day.clickable:hover {
+  filter: brightness(0.97);
+}
+
+.day.clickable:active,
+.month-day.clickable:active {
+  filter: brightness(0.92);
+}
+
+/* Add subtle edge so clickable items read tappable */
+.month-day.clickable,
+.day.clickable {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 /* =========================================================
-   VIEW NAVIGATION (IN-VIEW)
+   MUTED TEXT
    ========================================================= */
-
-.nav-link {
-  display: inline-block;
-  margin: 6px 0 10px 0;
-  padding: 6px 10px;
-
-  font-size: 0.8rem;
-  font-weight: 500;
-
-  background: #eef1f5;
-  border: 1px solid #aeb4be;
-  border-radius: 6px;
-
-  color: #0f172a;
-  cursor: pointer;
-}
-
-.nav-link:hover {
-  background: #e0e5eb;
-}
-
-.day {
-  background: #eef1f5;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 12px;
-}
-
-/* Day-view (and any non-week cards): left accent stripe via day intensity */
-.day:not(.week-day) {
-  background: linear-gradient(
-    to right,
-    rgba(47, 111, 237, calc(0.12 + 0.55 * var(--day-density, var(--density, 0)))) 6px,
-    #eef1f5 6px
-  );
-}
-
-
-.day.clickable {
-  cursor: pointer;
-}
-
-.day h2 {
-  margin: 0 0 4px 0;
-  font-size: 1rem;
-}
-
-.card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 8px;
-  margin-top: 6px;
-}
 
 .muted {
   font-size: 0.8rem;
-  color: #4b5563;
+  color: var(--ink-muted);
 }
 
+/* =========================================================
+   DAY VIEW EVENT LINKS
+   ========================================================= */
+
+/* Known-error area: link alignment/spacing sometimes feels off.
+   Fix applied here (block-like link spacing). */
+.card a {
+  color: var(--link);
+  text-decoration: underline;
+  font-weight: 650;
+
+  display: inline-block;
+  margin-top: 6px;
+}
+
+.card a:hover {
+  color: var(--link-hover);
+}
+
+/* =========================================================
+   EVENT CARDS – VISUAL STRUCTURE & CHARACTER
+   ========================================================= */
+
+.card {
+  /* Default (fallback) category accent */
+  --accent: var(--primary);
+
+  background: var(--surface);
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: var(--radius-card);
+
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  position: relative;
+
+  box-shadow: var(--shadow-sm);
+}
+
+/* Accent stripe */
+.card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--accent);
+  opacity: 0.35;
+}
+
+/* Title */
+.card h3 {
+  font-size: 1.05rem;
+  font-weight: 750;
+  margin: 0 0 6px 0;
+  color: rgba(15, 23, 42, 0.90);
+}
+
+/* Metadata */
+.card .muted {
+  color: rgba(15, 23, 42, 0.62);
+  line-height: 1.4;
+}
+
+/* Category label color */
+.card .muted:first-child {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Notes callout (rendered via inline background in JS) */
+.card div[style*="background"] {
+  background: rgba(234, 241, 251, 0.85) !important;
+  border-left: 3px solid rgba(var(--primary-rgb), 0.35);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: rgba(15, 23, 42, 0.75);
+}
+
+/* Divider line (rendered via inline height) */
+.card div[style*="height: 1px"] {
+  background: rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Keep grouped sections tight */
+.card > div {
+  margin-top: 2px;
+}
+
+/* Category accents */
+.card[data-category="CONCERTS"] { --accent: #7C5CFF; }
+.card[data-category="SPORTS"]   { --accent: #EF4444; }
+.card[data-category="FESTIVALS"]{ --accent: #F97316; }
+.card[data-category="THEATER"]  { --accent: #EC4899; }
+.card[data-category="COMEDY"]   { --accent: #EAB308; }
 
 /* =========================================================
    EXTENDED OUTLOOK (MONTH VIEW)
    ========================================================= */
 
-/* One row per week */
-.week-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-/* Individual day cell */
-.month-day {
-  position: relative;
-  min-height: 46px;
-  padding: 6px 8px;
-  border-radius: 8px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-
-  /* Day-level intensity */
-  background: linear-gradient(
-    to bottom,
-    rgba(47, 111, 237, calc(0.10 + 0.45 * var(--density, 0))),
-    rgba(47, 111, 237, calc(0.04 + 0.20 * var(--density, 0)))
-  );
-}
-
-/* Out-of-range days (before today / after window) */
-.month-day.empty {
-  visibility: hidden;
-}
-
-/* Day number */
-.month-day .date-label {
-  font-size: 0.80rem;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.1;
-}
-
-.month-day .day-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-/* Event count */
-.month-day .day-count {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #1f2933;
-  align-self: flex-end;
-}
-
-
-/* =========================================================
-   RESPONSIVE SAFETY
-   ========================================================= */
-
-@media (max-width: 600px) {
-  .month-day {
-    min-height: 40px;
-    padding: 5px 6px;
-  }
-
-  .month-day .day-count {
-    font-size: 0.75rem;
-  }
-}
-
-/* =========================================================
-   MONTH VIEW PANEL
-   ========================================================= */
-
 .month-panel {
-  background: #e1e6ee;
-  border: 1px solid #b8c0cc;
-  border-radius: 12px;
+  background: var(--surface-tint);
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: var(--radius-panel);
   padding: 12px;
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.10);
+  box-shadow: var(--shadow);
 }
 
 /* Month header band */
 .month-header {
-  background: #d4dbe6;
-  border-bottom: 1px solid #b8c0cc;
+  background: rgba(255, 255, 255, 0.55);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.12);
 
-  /* Pull header out to the panel edges */
   margin: -12px -12px 6px -12px;
+  padding: 10px 12px;
 
-  /* Align header content to same inset as calendar rows */
-  padding: 8px 12px;
-
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
 }
 
-/* Optional: weekday row inside header shouldn't add extra bottom spacing */
-.month-header .week-days {
-  margin-bottom: 0;
-}
-
-/* Stronger header text */
 .month-header .title {
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 0;
+  font-weight: 850;
+  color: var(--ink);
+  margin: 0;
   letter-spacing: 0.01em;
 }
 
 .month-header .subtitle {
   font-size: 0.75rem;
-  font-weight: 500;
-  color: #334155;
-  opacity: 0.85;
-  margin-bottom: 0;
+  font-weight: 650;
+  color: rgba(15, 23, 42, 0.70);
+  opacity: 0.9;
+  margin: 0;
 }
-
 
 /* Title + range on one line */
 .month-headline-row {
@@ -410,434 +508,177 @@ body {
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .month-headline-row .subtitle {
-  margin-bottom: 0;
   white-space: nowrap;
 }
 
+/* Weekday row + week rows */
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.month-header .week-days {
+  margin-bottom: 0;
+}
+
 /* Weekday labels */
-.month-header .weekday {
+.weekday {
   font-size: 0.72rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 850;
+  color: var(--ink);
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  opacity: 1;
-}
-
-/* Make every week-row grid (and the weekday header grid) use stable tracks */
-.week-days {
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-}
-
-/* Allow grid items to shrink instead of enforcing min-content width */
-.month-day,
-.weekday {
+  opacity: 0.92;
   min-width: 0;
 }
 
-/* Optional: prevent nowrap text from visually spilling */
+/* Individual day cell */
+.month-day {
+  position: relative;
+  min-height: 46px;
+  padding: 6px 8px;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  border: 1px solid rgba(15, 23, 42, 0.10);
+
+  /* Day-level intensity */
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--primary-rgb), calc(0.10 + 0.45 * var(--density, 0))),
+    rgba(var(--primary-rgb), calc(0.04 + 0.20 * var(--density, 0)))
+  );
+
+  min-width: 0;
+}
+
+/* Out-of-range cells */
+.month-day.empty {
+  visibility: hidden;
+}
+
+/* Day number */
+.month-day .date-label {
+  font-size: 0.80rem;
+  font-weight: 850;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+/* Event count / metrics */
 .month-day .metric {
   font-size: 0.70rem;
   line-height: 1.1;
 }
 
 .month-day .muted {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* =========================================================
-   CLICKABLE AFFORDANCES
-   ========================================================= */
-
-/* ---------- Month View Day Cells ---------- */
-
-.month-day.clickable {
-  cursor: pointer;
-}
-
-/* Desktop hover */
-.month-day.clickable:hover {
-  filter: brightness(0.95);
-}
-
-/* Mobile / touch press */
-.month-day.clickable:active {
-  filter: brightness(0.9);
-}
-
-
-/* ---------- Week View Day Cards ---------- */
-
-.day.clickable {
-  cursor: pointer;
-}
-
-/* Desktop hover */
-.day.clickable:hover {
-  filter: brightness(0.96);
-}
-
-/* Mobile / touch press */
-.day.clickable:active {
-  filter: brightness(0.9);
-}
-
-
-/* ---------- Day View Event Links ---------- */
-
-/* Make "View event" unmistakably a link */
-.card a {
-  color: #1f3a8a;
-  text-decoration: underline;
-  font-weight: 500;
-}
-
-/* Hover feedback for desktop */
-.card a:hover {
-  color: #1d4ed8;
-}
-
-/* =========================================================
-   DAY VIEW CARDS – VISUAL STRUCTURE & CHARACTER
-   ========================================================= */
-
-/* Base card elevation and spacing */
-.card {
-  background: #f9fafb;
-  border-radius: 10px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  position: relative;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
-/* Subtle left accent stripe */
-.card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 4px;
-  border-radius: 4px;
-  background: var(--accent);
-  opacity: 0.35;
-}
-
-/* Event title prominence */
-.card h3 {
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-  color: #111827;
-}
-
-/* Muted metadata tuning */
-.card .muted {
-  color: #4b5563;
-  line-height: 1.4;
-}
-
-/* Notes callout styling (soft insight box) */
-.card div[style*="background"] {
-  background: #eef2f7;
-  border-left: 3px solid #c7d2fe;
-}
-
-/* Improve spacing between grouped sections */
-.card > div {
-  margin-top: 2px;
-}
-
-/* =========================================
-   CATEGORY COLOR SYSTEM
-   ========================================= */
-
-/* Default (fallback) */
-.card {
-  --accent: #3b82f6; /* blue */
-}
-
-/* Category label color */
-.card .muted:first-child {
-  color: var(--accent);
-}
-
-/* Category-specific accents */
-.card[data-category="CONCERTS"] {
-  --accent: #8b5cf6; /* purple */
-}
-
-.card[data-category="SPORTS"] {
-  --accent: #ef4444; /* red */
-}
-
-.card[data-category="FESTIVALS"] {
-  --accent: #f97316; /* orange */
-}
-
-.card[data-category="THEATER"] {
-  --accent: #ec4899; /* pink */
-}
-
-.card[data-category="COMEDY"] {
-  --accent: #eab308; /* yellow */
-}
-
-/* =========================================================
-   DAY VIEW – BRIGHTNESS & EYE STRAIN FIX
-   ========================================================= */
-
-/* Day view background */
-.day:not(.week-day) {
-  background: #eef2f6;
-  border-radius: 12px;
-  padding: 10px 12px;
-  margin-bottom: 14px;
-}
-
-/* Event card base (slightly darker than before) */
-.card {
-  background: #f1f5f9;
-}
-
-/* Notes callout – darker and calmer */
-.card div[style*="background"] {
-  background: #e5ebf3;
-  color: #374151;
-}
-
-/* Divider tone softened */
-.card div[style*="height: 1px"] {
-  background: #d1d9e6;
-}
-
-/* =========================================================
-   HEADER VIEW SELECTOR – SEGMENTED CONTROL
-   ========================================================= */
-
-/* Container */
-.top-bar .views {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  gap: 0;
-  padding: 3px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-}
-
-/* Buttons */
-.top-bar .views button {
-  background: transparent;
-  border: none;
-  padding: 6px 12px;
-  font-weight: 500;
-  color: #1f2937;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-/* Active state */
-.top-bar .views button.active {
-  background: #ffffff;
-  color: #0f172a;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
-}
-
-/* Hover */
-.top-bar .views button:not(.active):hover {
-  background: rgba(255, 255, 255, 0.35);
-}
-
-
-/* =========================================================
-   DAY VIEW – DAY HEADER CLEANUP
-   ========================================================= */
-
-/* Day container */
-.day:not(.week-day) {
-  padding: 12px 14px;
-}
-
-/* Day title */
-.day:not(.week-day) h2 {
-  margin-bottom: 4px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-/* Day summary lines */
-.day:not(.week-day) > .muted {
-  font-size: 0.8rem;
-  color: #475569;
-}
-
-/* Pull summary closer to header */
-.day:not(.week-day) > .muted + .muted {
-  margin-top: -2px;
-}
-
-/* =========================================================
-   DAY VIEW – MULTI-DAY SCANABILITY
-   ========================================================= */
-
-/* Treat day blocks as sections, not cards */
-.day:not(.week-day) {
-  margin-bottom: 12px;     /* more space between days */
-  background: #edf1f5;     /* slightly darker, calmer */
-}
-
-/* Soften the day container edge */
-.day:not(.week-day) {
-  box-shadow: none;
-}
-
-/* Give the day header some air */
-.day:not(.week-day) h2 {
-  margin-top: 2px;
-  margin-bottom: 6px;
-}
-
-/* Reduce density of repeated muted lines */
-.day:not(.week-day) > .muted {
-  line-height: 1.3;
-}
-
-/* =========================================================
-   DAY VIEW – ATTENDANCE EDGE EMPHASIS (CORRECT)
-   ========================================================= */
-
-.day:not(.week-day) {
-  position: relative;
-}
-
-/* Left edge indicator driven by attendance */
-.day:not(.week-day)::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 6px;                 /* stronger presence */
-  border-radius: 6px;
-
-  /* Much stronger, still controlled */
-  background: rgba(
-    59,
-    130,
-    246,
-    calc(0.35 + 0.75 * var(--day-density, 0))
-  );
-}
-
-/* =========================================================
-   MONTH VIEW – MOBILE TEXT TUNING
-   ========================================================= */
-
-/* Event count + attendance in month cells */
-.month-day .muted {
   font-size: 0.65rem;
   line-height: 1.1;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: rgba(15, 23, 42, 0.72);
 }
 
-/* =========================================================
-   MOBILE CLICK AFFORDANCE – DAY CHIPS
-   ========================================================= */
-
-/* Month + Week clickable days */
-.month-day.clickable,
-.day.clickable {
-  border: 1px solid rgba(15, 23, 42, 0.18);
+/* Legend */
+.month-legend {
+  font-size: 0.72rem;
+  margin-top: 8px;
+  color: rgba(15, 23, 42, 0.65);
 }
-
-/* Subtle affordance hint */
-.month-day.clickable,
-.day.clickable {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* =========================================================
    WEATHER (DAY + WEEK)
    ========================================================= */
 
-/* Day view weather card */
 .weather-day {
   margin: 10px 0 8px;
   padding: 10px;
-  border-radius: 10px;
+
+  border-radius: 12px;
   border: 1px solid rgba(15, 23, 42, 0.10);
-  background: #e8edf4;
+  background: rgba(255, 255, 255, 0.60);
+
   display: flex;
   align-items: center;
   gap: 10px;
+
+  box-shadow: var(--shadow-sm);
 }
 
 .weather-day img {
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .weather-day .wx-title {
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #0f172a;
+  font-weight: 800;
+  color: var(--ink);
 }
 
 .weather-day .wx-details {
   margin-top: 2px;
   font-size: 0.8rem;
-  color: #334155;
+  color: rgba(15, 23, 42, 0.72);
 }
 
-/* When we explicitly place it at the bottom of the day */
 .weather-day.wx-bottom {
   margin-top: 12px;
 }
 
-/* Week view mini weather line (secondary) */
 .wx-mini {
   display: flex;
   align-items: center;
   gap: 6px;
   margin-top: 6px;
+
   font-size: 0.78rem;
-  color: #475569;
-  opacity: 0.9;
+  color: var(--ink-muted);
+  opacity: 0.92;
 }
 
 .wx-mini img {
   width: 16px;
   height: 16px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
+/* =========================================================
+   RESPONSIVE SAFETY
+   ========================================================= */
 
-.month-legend {
-  font-size: 0.7rem;
-  margin-top: 8px;
+@media (max-width: 600px) {
+  #app { padding: 10px; }
+
+  .top-bar { padding: 10px; }
+
+  .top-bar .views button {
+    padding: 7px 10px;
+    font-size: 0.82rem;
+  }
+
+  .month-day {
+    min-height: 40px;
+    padding: 5px 6px;
+  }
+
+  .month-day .metric { font-size: 0.68rem; }
+  .month-day .muted { font-size: 0.62rem; }
+
+  .weather-day {
+    padding: 9px;
+    gap: 8px;
+  }
 }
