@@ -2,7 +2,8 @@
    GLOBAL STATE
    ========================================================= */
 
-let allEvents = [];
+let allEventsRaw = [];
+let allEvents = []; // expanded (per-day) occurrences
 let currentView = "week";
 let selectedDayKey = null;
 let weekStartOverride = null; // null = On the Horizon (rolling); Date = calendar week
@@ -29,9 +30,12 @@ async function loadEvents() {
     const today = startOfDay(new Date());
     const todayKey = getLocalDayKey(today);
 
-    allEvents = normalized.filter(
+    allEventsRaw = normalized.filter(
       e => e._start && getLocalDayKey(e._start) >= todayKey
     );
+
+    // Expand multi-day events into per-day occurrences for counting/attendance.
+    allEvents = expandEventsForDailyBuckets(allEventsRaw);
 
     applyView();
   } catch (err) {
@@ -342,11 +346,41 @@ function getWeekStartMonday(date) {
    ========================================================= */
 
 function normalizeEvents(events) {
-  return events.map(e => ({
-    ...e,
-    _start: buildDateTime(e.startDate, e.startTime),
-    _end: buildDateTime(e.endDate, e.endTime)
-  }));
+  return events.map(e => {
+    // Support multiple possible field names coming from the export.
+    const startUtc = pickField(e, [
+      "Start_Date_UTC",
+      "start_date_utc",
+      "start_at_utc",
+      "startAtUtc",
+      "startDateUtc",
+      "startDateUTC"
+    ]);
+
+    const endUtc = pickField(e, [
+      "End_Date_UTC",
+      "end_date_utc",
+      "end_at_utc",
+      "endAtUtc",
+      "endDateUtc",
+      "endDateUTC"
+    ]);
+
+    // Prefer explicit UTC datetime fields if present; otherwise fall back to legacy date+time fields.
+    const start =
+      parseUtcDateTime(startUtc) ||
+      buildDateTime(e.startDate, e.startTime);
+
+    const end =
+      parseUtcDateTime(endUtc) ||
+      buildDateTime(e.endDate, e.endTime);
+
+    return {
+      ...e,
+      _start: start,
+      _end: end
+    };
+  });
 }
 
 function buildDateTime(dateStr, timeStr) {
@@ -372,15 +406,108 @@ function buildDateTime(dateStr, timeStr) {
   return d;
 }
 
+function pickField(obj, keys) {
+  for (const k of keys) {
+    if (obj && obj[k] != null && String(obj[k]).trim() !== "") return obj[k];
+  }
+  return null;
+}
+
+// Parses a UTC datetime string (or epoch) into a Date.
+// Returns null if the value can't be parsed.
+function parseUtcDateTime(value) {
+  if (value == null) return null;
+
+  if (value instanceof Date) {
+    return isNaN(value) ? null : new Date(value);
+  }
+
+  if (typeof value === "number") {
+    const d = new Date(value);
+    return isNaN(d) ? null : d;
+  }
+
+  const s = String(value).trim();
+  if (!s) return null;
+
+  // ISO or RFC style timestamps should parse cleanly in JS Date.
+  let d = new Date(s);
+  if (!isNaN(d)) return d;
+
+  // Date-only (YYYY-MM-DD) — treat as UTC midnight.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    d = new Date(s + "T00:00:00Z");
+    return isNaN(d) ? null : d;
+  }
+
+  return null;
+}
+
 
 /* =========================================================
    GROUPING + SUMMARY
    ========================================================= */
 
+function expandEventsForDailyBuckets(events) {
+  const expanded = [];
+
+  events.forEach(e => {
+    if (!e || !e._start) return;
+
+    const start = e._start;
+    const end = e._end;
+
+    // Default: single-day occurrence.
+    let spanDayKeys = [getLocalDayKey(start)];
+
+    if (end && !isNaN(end) && end > start) {
+      const durationMs = end - start;
+
+      // Spec: spans under 24 hours remain single-day, even if they cross midnight.
+      if (durationMs >= 24 * 60 * 60 * 1000) {
+        const startDay = startOfDay(start);
+        const endDay = startOfDay(end);
+
+        // Inclusive day span (start date through end date).
+        spanDayKeys = [];
+        const cursor = new Date(startDay);
+        while (cursor <= endDay) {
+          spanDayKeys.push(getLocalDayKey(cursor));
+          cursor.setDate(cursor.getDate() + 1);
+        }
+
+        // Safety: never expand to an extreme number of days.
+        if (spanDayKeys.length > 60) {
+          spanDayKeys = [getLocalDayKey(start)];
+        }
+      }
+    }
+
+    const rawAttendance = Number(e.attendanceEstimate);
+    const hasAttendance = Number.isFinite(rawAttendance) && rawAttendance > 0;
+    const perDayAttendance = hasAttendance
+      ? rawAttendance / spanDayKeys.length
+      : null;
+
+    spanDayKeys.forEach((dayKey, i) => {
+      expanded.push({
+        ...e,
+        _occurrenceDayKey: dayKey,
+        _isMultiDay: spanDayKeys.length > 1,
+        _spanDays: spanDayKeys.length,
+        _spanIndex: i + 1,
+        _attendanceAllocated: perDayAttendance
+      });
+    });
+  });
+
+  return expanded;
+}
+
 function groupEventsByDay(events) {
   return events.reduce((acc, e) => {
     if (!e._start) return acc;
-    const key = getLocalDayKey(e._start);
+    const key = e._occurrenceDayKey || getLocalDayKey(e._start);
     (acc[key] ||= []).push(e);
     return acc;
   }, {});
@@ -388,7 +515,7 @@ function groupEventsByDay(events) {
 
 function totalAttendance(events) {
   return events.reduce((sum, e) => {
-    const n = Number(e.attendanceEstimate);
+    const n = Number.isFinite(Number(e._attendanceAllocated)) ? Number(e._attendanceAllocated) : Number(e.attendanceEstimate);
     return Number.isFinite(n) && n > 0 ? sum + n : sum;
   }, 0);
 }
@@ -402,8 +529,9 @@ function getDaySummary(events) {
 }
 
 function formatAttendance(n) {
-  if (n >= 1000) return `${Math.round(n / 1000)}k`;
-  return String(n);
+  const x = Math.round(Number(n) || 0);
+  if (x >= 1000) return `${Math.round(x / 1000)}k`;
+  return String(x);
 }
 
 
@@ -435,7 +563,7 @@ function applyTopBarIntensity(intensity) {
 
 function renderDayView(dayKey) {
   const events = allEvents.filter(
-    e => getLocalDayKey(e._start) === dayKey
+    e => (e._occurrenceDayKey || getLocalDayKey(e._start)) === dayKey
   );
 
   const grouped = groupEventsByDay(events);
@@ -812,11 +940,14 @@ block.style.setProperty("--day-density", dayIntensity);
           c.appendChild(context);
 
           /* ---------- Attendance ---------- */
-          if (Number.isFinite(Number(e.attendanceEstimate))) {
+          const alloc = Number(e._attendanceAllocated);
+          const shownAttendance = Number.isFinite(alloc) ? alloc : Number(e.attendanceEstimate);
+          if (Number.isFinite(shownAttendance)) {
             const attendance = document.createElement("div");
             attendance.className = "muted";
             attendance.textContent =
-              `Estimated attendance: ~${formatAttendance(e.attendanceEstimate)}`;
+              `Estimated attendance: ~${formatAttendance(shownAttendance)}` +
+              (e._isMultiDay ? ` (split across ${e._spanDays} days)` : ``);
             c.appendChild(attendance);
           }
 
