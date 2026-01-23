@@ -603,39 +603,46 @@ function getViewCopy(view) {
   }
 }
 
-function buildViewHeader(view) {
+function updatePreviewBanner(view) {
+  // Preview banner lives in the sticky top bar (above the content),
+  // so it reads like a headline for the whole dashboard.
   try {
-    const app = document.getElementById("app");
-    if (app) {
-      app.querySelectorAll(".view-header").forEach((el) => el.remove());
+    const topBar = document.querySelector(".top-bar");
+    if (!topBar) return;
+
+    // Remove banner if not in preview mode
+    if (!PREVIEW_MODE) {
+      topBar.querySelectorAll(".preview-banner").forEach((el) => el.remove());
+      return;
     }
+
+    let banner = topBar.querySelector(".preview-banner");
+    if (!banner) {
+      banner = document.createElement("div");
+      banner.className = "preview-banner";
+      // Insert right after the view selector if present; otherwise append
+      const views = topBar.querySelector(".views");
+      if (views && views.parentNode) {
+        views.parentNode.insertBefore(banner, views.nextSibling);
+      } else {
+        topBar.appendChild(banner);
+      }
+    }
+
+    const { headline, tag } = getViewCopy(view);
+
+    const parts = [];
+    if (tag) parts.push(tag);
+    parts.push("Preview mode");
+    if (eventsGeneratedAt) parts.push("Data as of " + formatGeneratedAt(eventsGeneratedAt));
+
+    banner.innerHTML = `
+      <div class="preview-headline">${headline || ""}</div>
+      <div class="preview-tag muted">${parts.filter(Boolean).join(" • ")}</div>
+    `;
   } catch {
     // ignore
   }
-
-  const wrap = document.createElement("div");
-  wrap.className = "view-header";
-
-  const { headline, tag } = getViewCopy(view);
-
-  const h = document.createElement("div");
-  h.className = "view-headline";
-  h.textContent = headline;
-
-  const meta = document.createElement("div");
-  meta.className = "muted view-tag";
-  const parts = [];
-
-  if (tag) parts.push(tag);
-  if (PREVIEW_MODE) parts.push("Preview mode");
-  if (eventsGeneratedAt) parts.push("Data as of " + formatGeneratedAt(eventsGeneratedAt));
-
-  meta.textContent = parts.filter(Boolean).join(" • ");
-
-  wrap.appendChild(h);
-  if (meta.textContent) wrap.appendChild(meta);
-
-  return wrap;
 }
 
 /* =========================================================
@@ -685,7 +692,6 @@ function renderWeekView() {
 
 
   if (PREVIEW_MODE) {
-    app.appendChild(buildViewHeader("week"));
   }
 
   const nav = document.createElement("button");
@@ -762,7 +768,6 @@ function renderMonthView() {
   app.innerHTML = "";
 
   if (PREVIEW_MODE) {
-    app.appendChild(buildViewHeader("month"));
   }
 
   const today = startOfDay(new Date());
@@ -891,9 +896,12 @@ function renderMonthView() {
 }
 
 function syncTopNav() {
-  document.querySelectorAll("[data-view]").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.view === currentView);
-  });
+  document\.querySelectorAll\("\[data-view\]"\)\.forEach\(btn => \{
+    btn\.classList\.toggle\("active", btn\.dataset\.view === currentView\);
+  \}\);
+
+  // Update preview headline/tag banner in the sticky top bar
+  updatePreviewBanner(currentView);
 }
 
 /* =========================================================
