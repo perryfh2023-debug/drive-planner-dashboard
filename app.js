@@ -580,70 +580,76 @@ function formatGeneratedAt(iso) {
   }
 }
 
-function getViewCopy(view) {
-  // Headlines + tags (used in preview and also helpful in full mode)
+function getViewCopy(view = currentView) {
   switch (view) {
     case "month":
       return {
         headline: "Extended Outlook",
-        tag: "Next 30 days • Relative intensity (observational)"
+        tag: "Next 30 days • Big-picture intensity map (preview is not clickable)"
       };
     case "week":
       return {
         headline: "On the Horizon",
-        tag: "Next 7 days • Relative intensity (observational)"
+        tag: "Next 7 days • Daily roll‑up of events + estimated attendance (preview is not clickable)"
       };
     case "day":
+    default:
       return {
         headline: "Day View",
-        tag: "Event cards shown for planning context only"
+        tag: "Today’s event cards • Time, venue, and estimated attendance (preview is read‑only)"
       };
-    default:
-      return { headline: "", tag: "" };
   }
 }
 
-function updatePreviewBanner(view) {
-  // Preview banner lives in the sticky top bar (above the content),
-  // so it reads like a headline for the whole dashboard.
+function updatePreviewBanner(view = currentView) {
+  if (!PREVIEW_MODE) return;
+
   try {
-    const topBar = document.querySelector(".top-bar");
-    if (!topBar) return;
+    const top = document.querySelector(".top-bar");
+    const viewsEl = top?.querySelector(".views");
+    if (!top || !viewsEl) return;
 
-    // Remove banner if not in preview mode
-    if (!PREVIEW_MODE) {
-      topBar.querySelectorAll(".preview-banner").forEach((el) => el.remove());
-      return;
-    }
-
-    let banner = topBar.querySelector(".preview-banner");
+    let banner = top.querySelector(".preview-banner");
     if (!banner) {
       banner = document.createElement("div");
       banner.className = "preview-banner";
-      // Insert right after the view selector if present; otherwise append
-      const views = topBar.querySelector(".views");
-      if (views && views.parentNode) {
-        views.parentNode.insertBefore(banner, views.nextSibling);
-      } else {
-        topBar.appendChild(banner);
-      }
+      banner.setAttribute("role", "note");
+      viewsEl.insertAdjacentElement("afterend", banner);
+
+      // Inline styles so the banner reads like a real headline even before CSS updates.
+      banner.style.cssText = [
+        "margin-top: 10px",
+        "padding: 10px 12px",
+        "background: rgba(255,255,255,0.62)",
+        "border: 1px solid rgba(15,23,42,0.14)",
+        "border-radius: 12px",
+        "position: relative",
+        "z-index: 1"
+      ].join(";");
     }
 
     const { headline, tag } = getViewCopy(view);
 
-    const parts = [];
-    if (tag) parts.push(tag);
-    parts.push("Preview mode");
-    if (eventsGeneratedAt) parts.push("Data as of " + formatGeneratedAt(eventsGeneratedAt));
+    const metaParts = [];
+    metaParts.push("Preview mode");
+    if (eventsGeneratedAt) metaParts.push("Data as of " + formatGeneratedAt(eventsGeneratedAt));
 
     banner.innerHTML = `
-      <div class="preview-headline">${headline || ""}</div>
-      <div class="preview-tag muted">${parts.filter(Boolean).join(" • ")}</div>
+      <div style="font-weight:900;font-size:1.05rem;line-height:1.15;margin:0;color:rgba(15,23,42,0.92);">
+        ${headline || ""}
+      </div>
+      <div style="margin-top:3px;font-weight:650;font-size:0.84rem;line-height:1.25;color:rgba(15,23,42,0.72);">
+        ${tag || ""}
+      </div>
+      <div style="margin-top:6px;font-weight:650;font-size:0.72rem;line-height:1.2;color:rgba(15,23,42,0.62);">
+        ${metaParts.filter(Boolean).join(" • ")}
+      </div>
     `;
   } catch {
     // ignore
   }
 }
+
 
 /* =========================================================
    INTENSITY
@@ -895,20 +901,15 @@ function renderMonthView() {
   applyTopBarIntensity(0);
 }
 
-function syncTopNav() {
-  document\.querySelectorAll\("\[data-view\]"\)\.forEach\(btn => \{
-    btn\.classList\.toggle\("active", btn\.dataset\.view === currentView\);
-  \}\);
-
-  // Update preview headline/tag banner in the sticky top bar
-  updatePreviewBanner(currentView);
-}
 
 /* =========================================================
    ROUTER
    ========================================================= */
 
 function applyView() {
+  // Preview-only banner describing the current view (lives in the top bar)
+  if (PREVIEW_MODE) updatePreviewBanner(currentView);
+
   // Keep header weather in sync (safe no-op if not loaded)
   renderHeaderWeather();
 
