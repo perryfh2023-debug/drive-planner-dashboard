@@ -604,6 +604,15 @@ function getViewCopy(view) {
 }
 
 function buildViewHeader(view) {
+  try {
+    const app = document.getElementById("app");
+    if (app) {
+      app.querySelectorAll(".view-header").forEach((el) => el.remove());
+    }
+  } catch {
+    // ignore
+  }
+
   const wrap = document.createElement("div");
   wrap.className = "view-header";
 
@@ -674,14 +683,10 @@ function renderWeekView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
-  // View header (headline + tag + preview meta)
-  app.appendChild(buildViewHeader("day"));
 
-  // View header (headline + tag + preview meta)
-  app.appendChild(buildViewHeader("month"));
-
-  // View header (headline + tag + preview meta)
-  app.appendChild(buildViewHeader("week"));
+  if (PREVIEW_MODE) {
+    app.appendChild(buildViewHeader("week"));
+  }
 
   const nav = document.createElement("button");
   nav.className = "nav-link";
@@ -755,6 +760,10 @@ function renderWeekView() {
 function renderMonthView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
+
+  if (PREVIEW_MODE) {
+    app.appendChild(buildViewHeader("month"));
+  }
 
   const today = startOfDay(new Date());
   const grouped = groupEventsByDay(allEvents);
