@@ -222,6 +222,28 @@ body {
   background: rgba(255, 255, 255, 0.35);
 }
 
+/* Preview / view header styling */
+.view-header {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.view-headline {
+  font-size: 1.05rem;
+  font-weight: 850;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.view-tag {
+  font-size: 0.80rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
 /* =========================================================
    VIEW NAVIGATION (IN-VIEW) — back button, etc.
    ========================================================= */
@@ -682,3 +704,4 @@ body {
     gap: 8px;
   }
 }
+
