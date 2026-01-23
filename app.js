@@ -603,51 +603,31 @@ function getViewCopy(view) {
   }
 }
 
-function updatePreviewBanner(view) {
-  // Only show the banner in preview mode
-  const topBar = document.querySelector(".top-bar");
-  if (!topBar) return;
+function buildViewHeader(view) {
+  const wrap = document.createElement("div");
+  wrap.className = "view-header";
 
-  // Remove any existing banner in live mode
-  if (!PREVIEW_MODE) {
-    topBar.querySelectorAll(".preview-banner").forEach((el) => el.remove());
-    return;
-  }
+  const { headline, tag } = getViewCopy(view);
 
-  const copy = getViewCopy(view);
-  const headline = copy?.headline || "";
-  const tag = copy?.tag || "";
+  const h = document.createElement("div");
+  h.className = "view-headline";
+  h.textContent = headline;
 
-  // "Data as of" timestamp (from events.json)
-  const asOf = eventsGeneratedAt ? formatGeneratedAt(eventsGeneratedAt) : "";
+  const meta = document.createElement("div");
+  meta.className = "muted view-tag";
+  const parts = [];
 
-  // Build / reuse banner element
-  let banner = topBar.querySelector(".preview-banner");
-  if (!banner) {
-    banner = document.createElement("div");
-    banner.className = "preview-banner";
-  }
+  if (tag) parts.push(tag);
+  if (PREVIEW_MODE) parts.push("Preview mode");
+  if (eventsGeneratedAt) parts.push("Data as of " + formatGeneratedAt(eventsGeneratedAt));
 
-  // Keep it above the header intensity overlay
-  banner.style.position = "relative";
-  banner.style.zIndex = "1";
+  meta.textContent = parts.filter(Boolean).join(" • ");
 
-  // Compact header-like layout (CSS can refine further)
-  banner.innerHTML = `
-    <div class="preview-banner__headline">${headline}</div>
-    <div class="preview-banner__tag">${tag}</div>
-    ${asOf ? `<div class="preview-banner__asof">Preview mode • Data as of ${asOf}</div>` : `<div class="preview-banner__asof">Preview mode</div>`}
-  `.trim();
+  wrap.appendChild(h);
+  if (meta.textContent) wrap.appendChild(meta);
 
-  // IMPORTANT: place the banner ABOVE the segmented control so it feels like a true page header.
-  const views = topBar.querySelector(".views");
-  if (views && views.parentNode) {
-    views.parentNode.insertBefore(banner, views);
-  } else {
-    topBar.insertBefore(banner, topBar.firstChild);
-  }
+  return wrap;
 }
-
 
 /* =========================================================
    INTENSITY
@@ -694,9 +674,14 @@ function renderWeekView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // View header (headline + tag + preview meta)
+  app.appendChild(buildViewHeader("day"));
 
-  if (PREVIEW_MODE) {
-  }
+  // View header (headline + tag + preview meta)
+  app.appendChild(buildViewHeader("month"));
+
+  // View header (headline + tag + preview meta)
+  app.appendChild(buildViewHeader("week"));
 
   const nav = document.createElement("button");
   nav.className = "nav-link";
@@ -770,9 +755,6 @@ function renderWeekView() {
 function renderMonthView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
-
-  if (PREVIEW_MODE) {
-  }
 
   const today = startOfDay(new Date());
   const grouped = groupEventsByDay(allEvents);
@@ -900,15 +882,10 @@ function renderMonthView() {
 }
 
 function syncTopNav() {
-  // Keep the segmented control in sync with the active view
-  document.querySelectorAll("[data-view]").forEach((btn) => {
-    btn.classList.toggle("active", btn.getAttribute("data-view") === currentView);
+  document.querySelectorAll("[data-view]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === currentView);
   });
-
-  // In preview mode, keep the headline/tag banner in sync too
-  updatePreviewBanner(currentView);
 }
-
 
 /* =========================================================
    ROUTER
@@ -918,8 +895,10 @@ function applyView() {
   // Keep header weather in sync (safe no-op if not loaded)
   renderHeaderWeather();
 
-  // Keep the segmented control + preview banner in sync
-  syncTopNav();
+  // Keep top nav buttons in sync with the current view
+  document.querySelectorAll("[data-view]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === currentView);
+  });
 
   if (currentView === "day" && selectedDayKey) {
     renderDayView(selectedDayKey);
