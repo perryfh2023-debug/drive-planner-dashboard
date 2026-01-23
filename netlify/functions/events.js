@@ -1,23 +1,67 @@
+// netlify/functions/events.js
 import { getStore } from "@netlify/blobs";
 
 /**
- * Upstream Make export webhook (read-only).
- * - Prefer env var so you can rotate URLs without code changes.
- * - Fallback to the hardcoded URL you provided.
+ * Drive Planner Pro — Events API (cached snapshot)
+ *
+ * Responsibilities:
+ * - READ (GET): serve the cached snapshot quickly (what the dashboard consumes)
+ * - REFRESH (POST or GET ?refresh=1): pull a fresh snapshot from Make and overwrite the cache
+ *
+ * Important for Wix embeds:
+ * - We include permissive CORS headers so the iframe can fetch JSON reliably.
  */
+
+/** -------------------- Config -------------------- */
+const STORE_NAME = "events";
+const BLOB_KEY = "events.json";
+
 const MAKE_EXPORT_URL =
   process.env.MAKE_EXPORT_URL ||
   "https://hook.us2.make.com/7n9x5ux6h9denlqzmqxra3xm846cyhjt";
 
-/**
- * Optional: protect refresh endpoint.
- * If EVENTS_REFRESH_TOKEN is set in Netlify env, refresh must include:
- *   - x-refresh-token header OR
- *   - ?token=... query param (handy for schedulers)
- */
 const REFRESH_TOKEN = process.env.EVENTS_REFRESH_TOKEN || "";
 
-/** Helpers */
+/** -------------------- CORS -------------------- */
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, x-refresh-token",
+  "Access-Control-Max-Age": "86400",
+};
+
+/** -------------------- Helpers -------------------- */
+function jsonResponse(obj, { status = 200, extraHeaders = {} } = {}) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
+      ...CORS_HEADERS,
+      ...extraHeaders,
+    },
+  });
+}
+
+function textResponse(text, { status = 200, extraHeaders = {} } = {}) {
+  return new Response(text, {
+    status,
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+      ...CORS_HEADERS,
+      ...extraHeaders,
+    },
+  });
+}
+
+function refreshAuthorized(req, url) {
+  if (!REFRESH_TOKEN) return true;
+  const tokenHeader = req.headers.get("x-refresh-token") || "";
+  const tokenQuery = url.searchParams.get("token") || "";
+  return tokenHeader === REFRESH_TOKEN || tokenQuery === REFRESH_TOKEN;
+}
+
 function safeJsonParse(str) {
   try {
     return JSON.parse(str);
@@ -27,15 +71,41 @@ function safeJsonParse(str) {
 }
 
 function unwrapMakeItem(item) {
-  // Your Make output looks like: { data: { ... } }
-  // Some aggregator configurations can yield { Record: { ... } } or raw records.
+  // Common Make shapes: { data: { ... } }, { Record: { ... } }, or raw record.
   return item?.data ?? item?.Record ?? item ?? {};
 }
 
+function pickFirst(d, keys) {
+  for (const k of keys) {
+    const v = d?.[k];
+    if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+  }
+  return "";
+}
+
+function parseToDate(val) {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+
+  const s = String(val).trim();
+  if (!s) return null;
+
+  // Date-only -> treat as UTC midnight for stability
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const d = new Date(s + "T00:00:00Z");
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function isoDateUTC(dateObj) {
+  return dateObj.toISOString().slice(0, 10);
+}
+
 function normalizeCategoryAndNotes(d) {
-  // Sometimes category_canonical is accidentally a JSON string (observed in your sample payload).
-  // Example:
-  //   "{\"category_canonical\":\"Concerts\",\"attendance_estimate\":1600,\"notes_display\":\"...\"}"
+  // Sometimes category_canonical is accidentally a JSON string; unwrap if so.
   const maybeJson =
     typeof d.category_canonical === "string" &&
     d.category_canonical.trim().startsWith("{")
@@ -69,40 +139,9 @@ function buildAddress(d) {
 }
 
 function toIsoTime(dateStr, timeStr) {
-  // app.js does: new Date(timeStr) to read hours/minutes.
-  // "15:00:00" is unreliable across browsers, so return an ISO-ish string.
+  // Prefer ISO-ish datetime for consistent parsing in browsers
   if (dateStr && timeStr) return `${dateStr}T${timeStr}`;
   return timeStr || "";
-}
-
-function pickFirst(d, keys) {
-  for (const k of keys) {
-    const v = d?.[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") return v;
-  }
-  return "";
-}
-
-function parseToDate(val) {
-  // Accept Date, ISO datetime, or date-only string
-  if (!val) return null;
-  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
-  const s = String(val).trim();
-  if (!s) return null;
-
-  // If date-only (YYYY-MM-DD), treat as UTC midnight to keep stable
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
-    const d = new Date(s + "T00:00:00Z");
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function isoDateUTC(dateObj) {
-  // YYYY-MM-DD in UTC
-  return dateObj.toISOString().slice(0, 10);
 }
 
 function mapToAppEvent(makeItem) {
@@ -110,13 +149,14 @@ function mapToAppEvent(makeItem) {
 
   const { category, attendanceEstimate, notes } = normalizeCategoryAndNotes(d);
 
-  const startDate = d.start_local_date || "";
-  const startTime = toIsoTime(d.start_local_date, d.start_local_time);
+  // Start: prefer local day+time (your dashboard uses local day keys)
+  const startDate = String(pickFirst(d, ["start_local_date", "Start_Local_Date"])) || "";
+  const startLocalTime = String(pickFirst(d, ["start_local_time", "Start_Local_Time"])) || "";
+  const startTime = toIsoTime(startDate, startLocalTime);
 
-  // --- End time support (multi-day) ---
-  // Prefer local end fields if present; otherwise derive from End_Date_UTC (or common variants).
-  const endLocalDate = pickFirst(d, ["end_local_date", "End_Local_Date"]);
-  const endLocalTime = pickFirst(d, ["end_local_time", "End_Local_Time"]);
+  // End: prefer local end fields; otherwise use End_Date_UTC (or variants)
+  const endLocalDate = String(pickFirst(d, ["end_local_date", "End_Local_Date"])) || "";
+  const endLocalTime = String(pickFirst(d, ["end_local_time", "End_Local_Time"])) || "";
 
   const endUtcRaw = pickFirst(d, [
     "End_Date_UTC",
@@ -133,58 +173,65 @@ function mapToAppEvent(makeItem) {
   let endTime = "";
 
   if (endLocalDate) {
-    endDate = String(endLocalDate);
-    endTime = toIsoTime(String(endLocalDate), String(endLocalTime || "00:00:00"));
+    endDate = endLocalDate;
+    endTime = toIsoTime(endLocalDate, endLocalTime || "00:00:00");
   } else if (endUtcRaw) {
     const endD = parseToDate(endUtcRaw);
     if (endD) {
       endDate = isoDateUTC(endD);
-      endTime = endD.toISOString(); // full ISO is safest to parse consistently
+      endTime = endD.toISOString(); // safest for parsing everywhere
     }
   }
 
-  const title = (d.publish_title_candidate || "").trim();
+  const title = String(d.publish_title_candidate || d.title || "").trim();
 
   return {
-    // Fields expected by your app
     title,
-    category: category || "",
+    category: String(category || ""),
     startDate,
     startTime,
     endDate,
     endTime,
-    // Helpful passthrough for debugging / future logic (safe additive)
+
+    // Pass-through for debugging / future app logic (safe additive)
     End_Date_UTC: endUtcRaw ? String(endUtcRaw) : "",
-    venue: d.venue_name_raw || "",
+
+    venue: String(d.venue_name_raw || d.venue || ""),
     address: buildAddress(d),
     attendanceEstimate: String(attendanceEstimate ?? ""),
-    link: d.Link || d.link || d.source_url || d.sourceUrl || "",
-    notes: notes || "",
+    link: String(d.Link || d.link || d.source_url || d.sourceUrl || ""),
+    notes: String(notes || ""),
   };
 }
 
 async function fetchMakeSnapshot() {
   const res = await fetch(MAKE_EXPORT_URL, { method: "GET" });
+
+  // If Make returns non-JSON (e.g., "Accepted"), surface the real body text
+  const contentType = res.headers.get("content-type") || "";
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new Error(`Make export fetch failed: ${res.status} ${text}`.trim());
   }
 
-  const upstream = await res.json();
+  const upstream = contentType.includes("application/json")
+    ? await res.json()
+    : safeJsonParse(await res.text().catch(() => "")) ?? null;
 
-  // Upstream could be:
-  //  - raw array: [ {data:{...}}, ... ]   (your current Make output)
-  //  - or object with events: { events: [...] } (if you ever change Make later)
+  if (!upstream) {
+    throw new Error("Make export returned non-JSON response");
+  }
+
+  // Accept either an array or { events: [...] }
   const items = Array.isArray(upstream)
     ? upstream
     : Array.isArray(upstream?.events)
       ? upstream.events
       : [];
 
-  // Map + drop obviously broken rows
   const events = items
     .map(mapToAppEvent)
-    .filter((e) => e.title && e.startDate);
+    .filter((e) => e.title && e.startDate); // minimal viability filter
 
   return {
     generatedAt: new Date().toISOString(),
@@ -192,57 +239,56 @@ async function fetchMakeSnapshot() {
   };
 }
 
-function jsonResponse(obj, { status = 200, extraHeaders = {} } = {}) {
-  return new Response(JSON.stringify(obj), {
-    status,
-    headers: {
-      "Content-Type": "application/json",
-      ...extraHeaders,
-    },
-  });
-}
-
-function refreshAuthorized(req, url) {
-  if (!REFRESH_TOKEN) return true;
-
-  const tokenHeader = req.headers.get("x-refresh-token") || "";
-  const tokenQuery = url.searchParams.get("token") || "";
-
-  return tokenHeader === REFRESH_TOKEN || tokenQuery === REFRESH_TOKEN;
-}
-
+/** -------------------- Handler -------------------- */
 export default async (req) => {
-  const store = getStore("events");
-  const key = "events.json";
+  const store = getStore(STORE_NAME);
+  const url = new URL(req.url);
+
+  // CORS preflight
+  if (req.method === "OPTIONS") {
+    return textResponse("", { status: 204 });
+  }
 
   try {
-    // Detect GET refresh trigger
-    const url = new URL(req.url);
     const refreshParam = (url.searchParams.get("refresh") || "").toLowerCase();
     const refreshViaGet =
       req.method === "GET" && (refreshParam === "1" || refreshParam === "true");
 
-    // WRITE / REFRESH: fetch from Make and cache
+    // REFRESH
     if (req.method === "POST" || refreshViaGet) {
       if (!refreshAuthorized(req, url)) {
         return jsonResponse({ ok: false, error: "Unauthorized" }, { status: 401 });
       }
 
       const data = await fetchMakeSnapshot();
-      await store.setJSON(key, data);
+      await store.setJSON(BLOB_KEY, data);
 
       return jsonResponse({
         ok: true,
+        source: "make",
         count: data.events.length,
         generatedAt: data.generatedAt,
-        source: "make",
         refreshMethod: req.method === "POST" ? "POST" : "GET?refresh=1",
       });
     }
 
-    // READ: serve cached events to dashboard/app (FAST, NOT LIVE)
-    const cached = await store.get(key, { type: "json" });
-    return jsonResponse(cached ?? { events: [] });
+    // READ (cached)
+    const cached = await store.get(BLOB_KEY, { type: "json" });
+
+    // If cache missing, optionally seed once (unprotected only)
+    if (!cached) {
+      if (REFRESH_TOKEN) {
+        return jsonResponse(
+          { ok: false, error: "No cached payload yet" },
+          { status: 503 }
+        );
+      }
+      const data = await fetchMakeSnapshot();
+      await store.setJSON(BLOB_KEY, data);
+      return jsonResponse(data);
+    }
+
+    return jsonResponse(cached);
   } catch (err) {
     return jsonResponse({ ok: false, error: String(err) }, { status: 500 });
   }
