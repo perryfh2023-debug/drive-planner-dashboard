@@ -316,8 +316,6 @@ function buildMiniWeatherLine(dayKey) {
 }
 
 
-
-
 /* =========================================================
    DATE HELPERS
    ========================================================= */
@@ -562,74 +560,6 @@ function formatAttendance(n) {
 
 
 /* =========================================================
-   PREVIEW + VIEW COPY
-   ========================================================= */
-
-function formatGeneratedAt(iso) {
-  if (!iso) return "";
-  try {
-    return new Date(iso).toLocaleString([], {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit"
-    });
-  } catch {
-    return String(iso);
-  }
-}
-
-function getViewCopy(view) {
-  // Headlines + tags (used in preview and also helpful in full mode)
-  switch (view) {
-    case "month":
-      return {
-        headline: "Extended Outlook",
-        tag: "Next 30 days • Relative intensity (observational)"
-      };
-    case "week":
-      return {
-        headline: "On the Horizon",
-        tag: "Next 7 days • Relative intensity (observational)"
-      };
-    case "day":
-      return {
-        headline: "Day View",
-        tag: "Event cards shown for planning context only"
-      };
-    default:
-      return { headline: "", tag: "" };
-  }
-}
-
-function buildViewHeader(view) {
-  const wrap = document.createElement("div");
-  wrap.className = "view-header";
-
-  const { headline, tag } = getViewCopy(view);
-
-  const h = document.createElement("div");
-  h.className = "view-headline";
-  h.textContent = headline;
-
-  const meta = document.createElement("div");
-  meta.className = "muted view-tag";
-  const parts = [];
-
-  if (tag) parts.push(tag);
-  if (PREVIEW_MODE) parts.push("Preview mode");
-  if (eventsGeneratedAt) parts.push("Data as of " + formatGeneratedAt(eventsGeneratedAt));
-
-  meta.textContent = parts.filter(Boolean).join(" • ");
-
-  wrap.appendChild(h);
-  if (meta.textContent) wrap.appendChild(meta);
-
-  return wrap;
-}
-
-/* =========================================================
    INTENSITY
    ========================================================= */
 
@@ -673,15 +603,6 @@ function renderDayView(dayKey) {
 function renderWeekView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
-
-  // View header (headline + tag + preview meta)
-  app.appendChild(buildViewHeader("day"));
-
-  // View header (headline + tag + preview meta)
-  app.appendChild(buildViewHeader("month"));
-
-  // View header (headline + tag + preview meta)
-  app.appendChild(buildViewHeader("week"));
 
   const nav = document.createElement("button");
   nav.className = "nav-link";
@@ -1113,22 +1034,5 @@ block.style.setProperty("--day-density", dayIntensity);
 
 loadEvents();
 loadWeather();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
