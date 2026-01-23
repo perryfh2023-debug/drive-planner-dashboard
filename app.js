@@ -619,9 +619,7 @@ function updatePreviewBanner(view) {
   const tag = copy?.tag || "";
 
   // "Data as of" timestamp (from events.json)
-  const asOf = dataCache?.generatedAt
-    ? formatGeneratedAt(dataCache.generatedAt)
-    : "";
+  const asOf = eventsGeneratedAt ? formatGeneratedAt(eventsGeneratedAt) : "";
 
   // Build / reuse banner element
   let banner = topBar.querySelector(".preview-banner");
