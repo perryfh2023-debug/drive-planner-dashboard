@@ -75,6 +75,36 @@ function toIsoTime(dateStr, timeStr) {
   return timeStr || "";
 }
 
+function pickFirst(d, keys) {
+  for (const k of keys) {
+    const v = d?.[k];
+    if (v !== undefined && v !== null && String(v).trim() !== "") return v;
+  }
+  return "";
+}
+
+function parseToDate(val) {
+  // Accept Date, ISO datetime, or date-only string
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  const s = String(val).trim();
+  if (!s) return null;
+
+  // If date-only (YYYY-MM-DD), treat as UTC midnight to keep stable
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const d = new Date(s + "T00:00:00Z");
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function isoDateUTC(dateObj) {
+  // YYYY-MM-DD in UTC
+  return dateObj.toISOString().slice(0, 10);
+}
+
 function mapToAppEvent(makeItem) {
   const d = unwrapMakeItem(makeItem);
 
@@ -82,6 +112,36 @@ function mapToAppEvent(makeItem) {
 
   const startDate = d.start_local_date || "";
   const startTime = toIsoTime(d.start_local_date, d.start_local_time);
+
+  // --- End time support (multi-day) ---
+  // Prefer local end fields if present; otherwise derive from End_Date_UTC (or common variants).
+  const endLocalDate = pickFirst(d, ["end_local_date", "End_Local_Date"]);
+  const endLocalTime = pickFirst(d, ["end_local_time", "End_Local_Time"]);
+
+  const endUtcRaw = pickFirst(d, [
+    "End_Date_UTC",
+    "end_date_utc",
+    "end_at_utc",
+    "endTimeUtc",
+    "end_time_utc",
+    "end",
+    "endTime",
+    "end_time",
+  ]);
+
+  let endDate = "";
+  let endTime = "";
+
+  if (endLocalDate) {
+    endDate = String(endLocalDate);
+    endTime = toIsoTime(String(endLocalDate), String(endLocalTime || "00:00:00"));
+  } else if (endUtcRaw) {
+    const endD = parseToDate(endUtcRaw);
+    if (endD) {
+      endDate = isoDateUTC(endD);
+      endTime = endD.toISOString(); // full ISO is safest to parse consistently
+    }
+  }
 
   const title = (d.publish_title_candidate || "").trim();
 
@@ -91,8 +151,10 @@ function mapToAppEvent(makeItem) {
     category: category || "",
     startDate,
     startTime,
-    endDate: "", // not provided today; app tolerates missing
-    endTime: "", // not provided today; app tolerates missing
+    endDate,
+    endTime,
+    // Helpful passthrough for debugging / future logic (safe additive)
+    End_Date_UTC: endUtcRaw ? String(endUtcRaw) : "",
     venue: d.venue_name_raw || "",
     address: buildAddress(d),
     attendanceEstimate: String(attendanceEstimate ?? ""),
