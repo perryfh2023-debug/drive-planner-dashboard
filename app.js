@@ -12,6 +12,30 @@ let weekStartOverride = null; // null = On the Horizon (rolling); Date = calenda
 let weatherData = null;
 let weatherByDate = {};
 
+// Events snapshot meta (from /.netlify/functions/events)
+let eventsGeneratedAt = null;
+
+// Preview Mode: same live data, limited drill-down interactions.
+// Enable via ?preview=1 (or ?preview=true)
+const PREVIEW_MODE = (() => {
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const v = p.get("preview");
+    if (v === null) return false;
+    if (v === "" || v === "1") return true;
+    return ["true", "yes", "on"].includes(String(v).toLowerCase());
+  } catch {
+    return false;
+  }
+})();
+
+// Add a hook class so CSS can adjust affordances (optional)
+try {
+  document.body.classList.toggle("preview", PREVIEW_MODE);
+} catch {
+  // ignore
+}
+
 
 
 /* =========================================================
@@ -22,6 +46,8 @@ async function loadEvents() {
   try {
     const res = await fetch("/.netlify/functions/events");
     const data = await res.json();
+
+    eventsGeneratedAt = data?.generatedAt || data?.updatedAt || null;
 
     const normalized = Array.isArray(data.events)
       ? normalizeEvents(data.events)
@@ -536,6 +562,74 @@ function formatAttendance(n) {
 
 
 /* =========================================================
+   PREVIEW + VIEW COPY
+   ========================================================= */
+
+function formatGeneratedAt(iso) {
+  if (!iso) return "";
+  try {
+    return new Date(iso).toLocaleString([], {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  } catch {
+    return String(iso);
+  }
+}
+
+function getViewCopy(view) {
+  // Headlines + tags (used in preview and also helpful in full mode)
+  switch (view) {
+    case "month":
+      return {
+        headline: "Extended Outlook",
+        tag: "Next 30 days • Relative intensity (observational)"
+      };
+    case "week":
+      return {
+        headline: "On the Horizon",
+        tag: "Next 7 days • Relative intensity (observational)"
+      };
+    case "day":
+      return {
+        headline: "Day View",
+        tag: "Event cards shown for planning context only"
+      };
+    default:
+      return { headline: "", tag: "" };
+  }
+}
+
+function buildViewHeader(view) {
+  const wrap = document.createElement("div");
+  wrap.className = "view-header";
+
+  const { headline, tag } = getViewCopy(view);
+
+  const h = document.createElement("div");
+  h.className = "view-headline";
+  h.textContent = headline;
+
+  const meta = document.createElement("div");
+  meta.className = "muted view-tag";
+  const parts = [];
+
+  if (tag) parts.push(tag);
+  if (PREVIEW_MODE) parts.push("Preview mode");
+  if (eventsGeneratedAt) parts.push("Data as of " + formatGeneratedAt(eventsGeneratedAt));
+
+  meta.textContent = parts.filter(Boolean).join(" • ");
+
+  wrap.appendChild(h);
+  if (meta.textContent) wrap.appendChild(meta);
+
+  return wrap;
+}
+
+/* =========================================================
    INTENSITY
    ========================================================= */
 
@@ -580,6 +674,15 @@ function renderWeekView() {
   const app = document.getElementById("app");
   app.innerHTML = "";
 
+  // View header (headline + tag + preview meta)
+  app.appendChild(buildViewHeader("day"));
+
+  // View header (headline + tag + preview meta)
+  app.appendChild(buildViewHeader("month"));
+
+  // View header (headline + tag + preview meta)
+  app.appendChild(buildViewHeader("week"));
+
   const nav = document.createElement("button");
   nav.className = "nav-link";
   nav.textContent = "← To Extended Outlook";
@@ -608,7 +711,7 @@ function renderWeekView() {
     maxIntensity = Math.max(maxIntensity, intensity);
 
     const block = document.createElement("div");
-    block.className = "day clickable week-day";
+    block.className = PREVIEW_MODE ? "day week-day" : "day clickable week-day";
     block.style.setProperty("--density", intensity);
 
     const h = document.createElement("h2");
@@ -632,11 +735,13 @@ function renderWeekView() {
     const wx = buildMiniWeatherLine(key);
     if (wx) block.appendChild(wx);
 
-    block.addEventListener("click", () => {
-      selectedDayKey = key;
-      currentView = "day";
-      applyView();
-    });
+    if (!PREVIEW_MODE) {
+      block.addEventListener("click", () => {
+        selectedDayKey = key;
+        currentView = "day";
+        applyView();
+      });
+    }
 
     app.appendChild(block);
   }
@@ -748,16 +853,18 @@ function renderMonthView() {
         cell.appendChild(ae);
       }
 
-      cell.classList.add("clickable");
-      cell.addEventListener("click", () => {
-        if (isDateInCurrentWeek(d)) {
-          weekStartOverride = null;
-        } else {
-          weekStartOverride = getWeekStartMonday(d);
-        }
-        currentView = "week";
-        applyView();
-      });
+      if (!PREVIEW_MODE) {
+        cell.classList.add("clickable");
+        cell.addEventListener("click", () => {
+          if (isDateInCurrentWeek(d)) {
+            weekStartOverride = null;
+          } else {
+            weekStartOverride = getWeekStartMonday(d);
+          }
+          currentView = "week";
+          applyView();
+        });
+      }
 
       row.appendChild(cell);
     }
