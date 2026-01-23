@@ -180,6 +180,34 @@ body {
   opacity: 0.9;
 }
 
+/* Preview header banner (only appears when ?preview=1) */
+.preview-banner{
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.65);
+  border: 1px solid rgba(15,23,42,0.12);
+}
+
+.preview-banner__headline{
+  font-weight: 850;
+  font-size: 0.95rem;
+  color: rgba(15,23,42,0.92);
+}
+
+.preview-banner__tag{
+  margin-top: 2px;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: rgba(15,23,42,0.70);
+}
+
+.preview-banner__asof{
+  margin-top: 2px;
+  font-size: 0.70rem;
+  color: rgba(15,23,42,0.55);
+}
+
 /* =========================================================
    HEADER VIEW SELECTOR — SEGMENTED CONTROL
    ========================================================= */
@@ -704,4 +732,5 @@ body {
     gap: 8px;
   }
 }
+
 
