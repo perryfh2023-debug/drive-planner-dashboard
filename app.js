@@ -1,14 +1,23 @@
 /* =========================================================
    GLOBAL STATE
    ========================================================= */
-// Default view:
-// - Preview embed should start on Extended Outlook (month)
-// - Normal dashboard keeps its existing default (week / "On the Horizon")
-let currentView = PREVIEW_MODE ? "month" : "week";
+
+// Preview-safe default view (does NOT depend on PREVIEW_MODE being defined yet)
+let currentView = "week"; // Normal default = "On the Horizon" / week view
+
+try {
+  const params = new URLSearchParams(window.location.search);
+  const isPreview = params.get("preview") === "1";
+  if (isPreview) currentView = "month"; // Preview default = Extended Outlook
+} catch (_) {
+  // If URL parsing fails for any reason, keep default "week"
+}
+
 let allEventsRaw = [];
 let allEvents = []; // expanded (per-day) occurrences
 let selectedDayKey = null;
 let weekStartOverride = null; // null = On the Horizon (rolling); Date = calendar week
+
 
 // Weather (loaded from /.netlify/functions/weather)
 let weatherData = null;
@@ -1036,6 +1045,7 @@ block.style.setProperty("--day-density", dayIntensity);
 
 loadEvents();
 loadWeather();
+
 
 
 
