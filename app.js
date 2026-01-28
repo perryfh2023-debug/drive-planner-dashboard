@@ -1,10 +1,12 @@
 /* =========================================================
    GLOBAL STATE
    ========================================================= */
-
+// Default view:
+// - Preview embed should start on Extended Outlook (month)
+// - Normal dashboard keeps its existing default (week / "On the Horizon")
+let currentView = PREVIEW_MODE ? "month" : "week";
 let allEventsRaw = [];
 let allEvents = []; // expanded (per-day) occurrences
-let currentView = "week";
 let selectedDayKey = null;
 let weekStartOverride = null; // null = On the Horizon (rolling); Date = calendar week
 
@@ -1034,5 +1036,6 @@ block.style.setProperty("--day-density", dayIntensity);
 
 loadEvents();
 loadWeather();
+
 
 
