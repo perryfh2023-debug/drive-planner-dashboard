@@ -48,6 +48,67 @@ try {
 }
 
 
+/* =========================================================
+   PREVIEW AUTO-ROTATION (Preview Mode Only)
+   - Rotates Month → Week → Today every PREVIEW_ROTATION_DELAY_MS
+   - Stops permanently once the user clicks any view selector or nav-link
+   ========================================================= */
+
+const PREVIEW_ROTATION_DELAY_MS = 5000; // 5 seconds
+
+let previewRotationTimer = null;
+let previewRotationLocked = false;
+
+function stopPreviewRotation() {
+  if (!PREVIEW_MODE) return;
+  previewRotationLocked = true;
+  if (previewRotationTimer) {
+    clearInterval(previewRotationTimer);
+    previewRotationTimer = null;
+  }
+}
+
+function rotatePreviewViewOnce() {
+  if (!PREVIEW_MODE || previewRotationLocked) return;
+
+  const views = ["month", "week", "day"]; // "day" = Today view
+  const idx = Math.max(0, views.indexOf(currentView));
+  const next = views[(idx + 1) % views.length];
+
+  currentView = next;
+  selectedDayKey = (currentView === "day") ? getLocalDayKey(new Date()) : null;
+
+  // Keep preview stable: always use rolling "On the Horizon" week
+  if (currentView === "week") weekStartOverride = null;
+
+  applyView();
+}
+
+function startPreviewRotation() {
+  if (!PREVIEW_MODE || previewRotationLocked) return;
+  if (previewRotationTimer) return;
+
+  previewRotationTimer = setInterval(
+    rotatePreviewViewOnce,
+    PREVIEW_ROTATION_DELAY_MS
+  );
+}
+
+// Stop rotation when the user explicitly interacts with view navigation.
+// (capture=true so it runs before the specific button handlers)
+if (PREVIEW_MODE) {
+  document.addEventListener("click", (e) => {
+    const t = e?.target;
+    if (!t || typeof t.closest !== "function") return;
+
+    if (t.closest("[data-view]") || t.closest(".nav-link")) {
+      stopPreviewRotation();
+    }
+  }, true);
+}
+
+
+
 
 /* =========================================================
    LOAD EVENTS
@@ -75,6 +136,9 @@ async function loadEvents() {
     allEvents = expandEventsForDailyBuckets(allEventsRaw);
 
     applyView();
+
+    // Preview-only: auto-rotate views until the user makes a selection
+    if (PREVIEW_MODE) startPreviewRotation();
   } catch (err) {
     console.error("Failed to load events", err);
     document.getElementById("app").innerHTML =
@@ -151,6 +215,22 @@ function ensureHeaderTopline() {
   if (city && city.parentElement !== top) {
     top.insertBefore(city, top.firstChild);
   }
+
+// Preview notice (only in preview mode)
+if (PREVIEW_MODE) {
+  let notice = top.querySelector(".preview-notice");
+  if (!notice) {
+    notice = document.createElement("div");
+    notice.className = "preview-notice muted";
+    notice.textContent = "Preview mode: deep-dive views are limited. Full drilldowns are available in the member dashboard.";
+    // Inline-safe styling (keeps this self-contained without CSS edits)
+    notice.style.fontSize = "12px";
+    notice.style.marginTop = "4px";
+    notice.style.opacity = "0.85";
+    notice.style.lineHeight = "1.2";
+    top.appendChild(notice);
+  }
+}
 
   return top;
 }
