@@ -54,7 +54,7 @@ try {
    - Stops permanently once the user clicks any view selector or nav-link
    ========================================================= */
 
-const PREVIEW_ROTATION_DELAY_MS = 5000; // 5 seconds
+const PREVIEW_ROTATION_DELAY_MS = 12000; // 12 seconds
 
 let previewRotationTimer = null;
 let previewRotationLocked = false;
@@ -1125,6 +1125,7 @@ block.style.setProperty("--day-density", dayIntensity);
 
 loadEvents();
 loadWeather();
+
 
 
 
