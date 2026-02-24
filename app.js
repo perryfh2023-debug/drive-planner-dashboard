@@ -1,4 +1,4 @@
-/* UI bundle v3.1: fixes category toggles (master dataset) */
+/* UI bundle v3.2: category chips are true toggles (never disappear) */
 /* =========================================================
    GLOBAL STATE
    ========================================================= */
@@ -206,17 +206,34 @@ function renderAttributionFooter(container) {
 }
 
 function renderCategoryFilterBar(container, eventsForCounts) {
-  if (!enabledCategories) initEnabledCategories(eventsForCounts);
+  // Important: the chip list must be derived from the *unfiltered* master dataset
+  // so categories never disappear after being toggled off.
+  const universe = Array.isArray(allEventsMaster) && allEventsMaster.length
+    ? allEventsMaster
+    : (Array.isArray(eventsForCounts) ? eventsForCounts : []);
 
-  // counts by category (based on the same events the view is showing)
+  if (!enabledCategories) initEnabledCategories(universe);
+
+  // Counts by category for the current view context:
+  // use the provided eventsForCounts if possible, but do NOT let category filtering
+  // collapse the chip list (chips come from universe).
   const counts = {};
-  eventsForCounts.forEach(e => {
+  const countSource = Array.isArray(eventsForCounts) && eventsForCounts.length ? eventsForCounts : universe;
+
+  countSource.forEach(e => {
     const c = getEventCategory(e);
     if (!c) return;
     counts[c] = (counts[c] || 0) + 1;
   });
 
-  const cats = Object.keys(counts).sort((a,b) => (counts[b]-counts[a]) || a.localeCompare(b));
+  // Build a stable category list from the universe (so disabled categories still render).
+  const catsAll = new Set();
+  universe.forEach(e => {
+    const c = getEventCategory(e);
+    if (c) catsAll.add(c);
+  });
+
+  const cats = Array.from(catsAll).sort((a, b) => ( (counts[b] || 0) - (counts[a] || 0) ) || a.localeCompare(b));
   if (!cats.length) return;
 
   const wrap = document.createElement("div");
@@ -234,14 +251,26 @@ function renderCategoryFilterBar(container, eventsForCounts) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "category-chip";
-    btn.dataset.cat = cat;
-    btn.textContent = `${cat.toUpperCase()} (${counts[cat]})`;
-    btn.classList.toggle("off", !enabledCategories.has(cat));
+    btn.dataset.cat = cat;              // normalized category slug
+    btn.dataset.category = cat;         // alias for CSS hooks
+    btn.setAttribute("aria-pressed", enabledCategories.has(cat) ? "true" : "false");
+
+    const n = counts[cat] || 0;
+    btn.textContent = `${cat.toUpperCase()} (${n})`;
+
+    const isOff = !enabledCategories.has(cat);
+    btn.classList.toggle("off", isOff);
 
     btn.addEventListener("click", () => {
       if (enabledCategories.has(cat)) enabledCategories.delete(cat);
       else enabledCategories.add(cat);
+
       persistEnabledCategories();
+
+      // Toggle UI state immediately (feels like a true toggle, even before re-render)
+      btn.classList.toggle("off", !enabledCategories.has(cat));
+      btn.setAttribute("aria-pressed", enabledCategories.has(cat) ? "true" : "false");
+
       applyView(); // re-render current view with new filter
     });
 
@@ -252,7 +281,7 @@ function renderCategoryFilterBar(container, eventsForCounts) {
 
   const hint = document.createElement("div");
   hint.className = "muted category-hint";
-  hint.textContent = "Tap a category to hide/show it.";
+  hint.textContent = "Tap to toggle categories on/off.";
   wrap.appendChild(hint);
 
   container.appendChild(wrap);
@@ -856,7 +885,7 @@ function renderWeekView() {
   app.appendChild(nav);
 
   // Category filters
-  renderCategoryFilterBar(app, allEventsRaw);
+  renderCategoryFilterBar(app, allEventsMaster);
 
   const start = weekStartOverride
     ? startOfDay(weekStartOverride)
@@ -970,7 +999,7 @@ function renderMonthView() {
   panel.appendChild(header);
 
   // Category filters
-  renderCategoryFilterBar(panel, allEventsRaw);
+  renderCategoryFilterBar(panel, allEventsMaster);
 
   /* ---------- Grid (5 rows total) ---------- */
   for (let rowIdx = 0; rowIdx < ROWS; rowIdx++) {
@@ -1144,7 +1173,7 @@ function renderGroupedEvents(grouped) {
   app.appendChild(nav);
 
   // Category filters
-  renderCategoryFilterBar(app, allEventsRaw);
+  renderCategoryFilterBar(app, allEventsMaster);
 
   Object.keys(grouped).sort().forEach(dayKey => {
     const block = document.createElement("div");
