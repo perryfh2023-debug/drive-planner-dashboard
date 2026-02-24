@@ -1,3 +1,4 @@
+/* UI bundle v3 companion (no functional change): 2026-02-24 */
 // netlify/functions/events.js
 import { getStore } from "@netlify/blobs";
 
