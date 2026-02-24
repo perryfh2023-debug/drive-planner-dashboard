@@ -734,3 +734,13 @@ body {
 }
 
 
+
+
+/* PredictHQ attribution */
+.phq-attribution{
+  display:block;
+  margin:14px 0 4px;
+  text-align:center;
+  text-decoration:none;
+}
+.phq-attribution:hover{ text-decoration:underline; }
