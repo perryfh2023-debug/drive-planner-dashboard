@@ -18,6 +18,11 @@ let allEvents = []; // expanded (per-day) occurrences
 let selectedDayKey = null;
 let weekStartOverride = null; // null = On the Horizon (rolling); Date = calendar week
 
+/** -------------------- Display rules -------------------- */
+const MIN_DISPLAY_ATTENDANCE = 200; // hide events without a numeric attendance or below this threshold
+const PHQ_ATTRIBUTION_TEXT = "Events by PredictHQ";
+const PHQ_ATTRIBUTION_URL = "https://www.predicthq.com";
+
 
 // Weather (loaded from /.netlify/functions/weather)
 let weatherData = null;
@@ -129,10 +134,9 @@ async function loadEvents() {
     const todayKey = getLocalDayKey(today);
 
     allEventsRaw = normalized.filter(
-      e => e._start && getLocalDayKey(e._start) >= todayKey
+      e => e._start && getLocalDayKey(e._start) >= todayKey && passesAttendanceRequired(e)
     );
-
-    // Expand multi-day events into per-day occurrences for counting/attendance.
+// Expand multi-day events into per-day occurrences for counting/attendance.
     allEvents = expandEventsForDailyBuckets(allEventsRaw);
 
     applyView();
@@ -521,6 +525,41 @@ function buildDateTime(dateStr, timeStr) {
   return d;
 }
 
+
+function getNumericAttendance(e) {
+  const n = Number(e.attendanceEstimate);
+  return Number.isFinite(n) ? n : null;
+}
+
+function passesAttendanceRequired(e) {
+  const n = getNumericAttendance(e);
+  return n !== null && n >= MIN_DISPLAY_ATTENDANCE;
+}
+
+function isPureAttributionNote(note) {
+  const t = String(note || "").trim().toLowerCase();
+  if (!t) return false;
+  // Common patterns we've used historically.
+  return (
+    t === "sourced from predicthq.com" ||
+    t === "source: predicthq.com" ||
+    t === "predicthq.com" ||
+    t === "events by predicthq" ||
+    t.includes("predicthq.com") ||
+    t.includes("events by predicthq")
+  );
+}
+
+function ensureAttributionFooter(container) {
+  if (!container || container.querySelector(".phq-attribution")) return;
+  const a = document.createElement("a");
+  a.className = "muted phq-attribution";
+  a.href = PHQ_ATTRIBUTION_URL;
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.textContent = PHQ_ATTRIBUTION_TEXT;
+  container.appendChild(a);
+}
 function pickField(obj, keys) {
   for (const k of keys) {
     if (obj && obj[k] != null && String(obj[k]).trim() !== "") return obj[k];
@@ -854,14 +893,14 @@ function renderMonthView() {
       if (summary.eventCount > 0) {
         const ec = document.createElement("div");
         ec.className = "muted metric";
-        ec.textContent = `EC ${summary.eventCount}`;
+        ec.textContent = `${summary.eventCount}`;
         cell.appendChild(ec);
       }
 
       if (summary.attendanceSum > 0) {
         const ae = document.createElement("div");
         ae.className = "muted metric";
-        ae.textContent = `EA ~${formatAttendance(summary.attendanceSum)}`;
+        ae.textContent = `~${formatAttendance(summary.attendanceSum)}`;
         cell.appendChild(ae);
       }
 
@@ -887,9 +926,7 @@ function renderMonthView() {
   /* ---------- Legend ---------- */
   const legend = document.createElement("div");
   legend.className = "muted month-legend";
-  legend.textContent = "EC = event count • EA = estimated attendance";
-  panel.appendChild(legend);
-
+  
   applyTopBarIntensity(0);
 }
 
@@ -926,6 +963,9 @@ function applyView() {
     renderMonthView();
     return;
   }
+  // PredictHQ attribution (required by some plans). Keep it visible without cluttering each card.
+  try { ensureAttributionFooter(document.getElementById('content')); } catch (_) {}
+
 }
 
 /* =========================================================
@@ -1082,7 +1122,7 @@ block.style.setProperty("--day-density", dayIntensity);
           }
 
           /* ---------- Notes (with divider) ---------- */
-          if (e.notes && String(e.notes).trim()) {
+          if (e.notes && String(e.notes).trim() && !isPureAttributionNote(e.notes)) {
             const divider = document.createElement("div");
             divider.style.height = "1px";
             divider.style.background = "#e5e7eb";
