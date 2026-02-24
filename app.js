@@ -1,3 +1,4 @@
+/* UI bundle v3.1: fixes category toggles (master dataset) */
 /* =========================================================
    GLOBAL STATE
    ========================================================= */
@@ -14,14 +15,10 @@ try {
 }
 
 let allEventsRaw = [];
+let allEventsMaster = []; // attendance+date filtered, before category toggles
 let allEvents = []; // expanded (per-day) occurrences
 let selectedDayKey = null;
 let weekStartOverride = null; // null = On the Horizon (rolling); Date = calendar week
-
-/** -------------------- Display rules -------------------- */
-const MIN_DISPLAY_ATTENDANCE = 200; // hide events without a numeric attendance or below this threshold
-const PHQ_ATTRIBUTION_TEXT = "Events by PredictHQ";
-const PHQ_ATTRIBUTION_URL = "https://www.predicthq.com";
 
 
 // Weather (loaded from /.netlify/functions/weather)
@@ -116,6 +113,152 @@ if (PREVIEW_MODE) {
 
 
 /* =========================================================
+   DISPLAY GUARDRAILS
+   ========================================================= */
+
+const MIN_DISPLAY_ATTENDANCE = 200;
+
+// Category filter state (persisted)
+let enabledCategories = null; // Set<string> once initialized
+
+function normalizeCategory(cat) {
+  return String(cat || "").trim().toLowerCase();
+}
+
+function getEventCategory(e) {
+  return normalizeCategory(e.category || e.Category || e.eventCategory);
+}
+
+function getEventAttendance(e) {
+  // Prefer allocated attendance for multi-day occurrences
+  const alloc = Number(e._attendanceAllocated);
+  if (Number.isFinite(alloc) && alloc > 0) return alloc;
+
+  const candidates = [
+    e.attendanceEstimate,
+    e.phq_attendance,
+    e.attendance,
+    e.attendance_estimate,
+    e.Attendance,
+    e.attendanceEstimateSum
+  ];
+
+  for (const v of candidates) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return null;
+}
+
+function passesAttendanceRequired(e) {
+  const n = getEventAttendance(e);
+  if (n === null) return false; // attendance REQUIRED
+  return n >= MIN_DISPLAY_ATTENDANCE;
+}
+
+function initEnabledCategories(events) {
+  const cats = new Set();
+  events.forEach(e => {
+    const c = getEventCategory(e);
+    if (c) cats.add(c);
+  });
+
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem("enabledCategories") || "null"); }
+    catch { return null; }
+  })();
+
+  if (Array.isArray(saved) && saved.length) {
+    enabledCategories = new Set(saved.map(normalizeCategory));
+  } else {
+    enabledCategories = cats; // default: all on
+  }
+}
+
+function persistEnabledCategories() {
+  try {
+    localStorage.setItem("enabledCategories", JSON.stringify(Array.from(enabledCategories || [])));
+  } catch (_) {}
+}
+
+function isCategoryEnabled(cat) {
+  if (!enabledCategories) return true;
+  const c = normalizeCategory(cat);
+  if (!c) return true;
+  return enabledCategories.has(c);
+}
+
+function filterByEnabledCategories(events) {
+  return events.filter(e => isCategoryEnabled(getEventCategory(e)));
+}
+
+function recomputeFilteredEvents() {
+  allEventsRaw = filterByEnabledCategories(allEventsMaster);
+  // Expand multi-day events into per-day occurrences for counting/attendance.
+  allEvents = expandEventsForDailyBuckets(allEventsRaw);
+}
+
+function renderAttributionFooter(container) {
+  const foot = document.createElement("div");
+  foot.className = "phq-attribution";
+  foot.innerHTML = `Events by <a href="https://predicthq.com" target="_blank" rel="noopener">PredictHQ</a>`;
+  container.appendChild(foot);
+}
+
+function renderCategoryFilterBar(container, eventsForCounts) {
+  if (!enabledCategories) initEnabledCategories(eventsForCounts);
+
+  // counts by category (based on the same events the view is showing)
+  const counts = {};
+  eventsForCounts.forEach(e => {
+    const c = getEventCategory(e);
+    if (!c) return;
+    counts[c] = (counts[c] || 0) + 1;
+  });
+
+  const cats = Object.keys(counts).sort((a,b) => (counts[b]-counts[a]) || a.localeCompare(b));
+  if (!cats.length) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "category-filter";
+
+  const label = document.createElement("div");
+  label.className = "category-filter-label";
+  label.textContent = "Categories";
+  wrap.appendChild(label);
+
+  const chips = document.createElement("div");
+  chips.className = "category-chips";
+
+  cats.forEach(cat => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "category-chip";
+    btn.dataset.cat = cat;
+    btn.textContent = `${cat.toUpperCase()} (${counts[cat]})`;
+    btn.classList.toggle("off", !enabledCategories.has(cat));
+
+    btn.addEventListener("click", () => {
+      if (enabledCategories.has(cat)) enabledCategories.delete(cat);
+      else enabledCategories.add(cat);
+      persistEnabledCategories();
+      applyView(); // re-render current view with new filter
+    });
+
+    chips.appendChild(btn);
+  });
+
+  wrap.appendChild(chips);
+
+  const hint = document.createElement("div");
+  hint.className = "muted category-hint";
+  hint.textContent = "Tap a category to hide/show it.";
+  wrap.appendChild(hint);
+
+  container.appendChild(wrap);
+}
+
+/* =========================================================
    LOAD EVENTS
    ========================================================= */
 
@@ -133,13 +276,16 @@ async function loadEvents() {
     const today = startOfDay(new Date());
     const todayKey = getLocalDayKey(today);
 
-    allEventsRaw = normalized.filter(
-      e => e._start && getLocalDayKey(e._start) >= todayKey && passesAttendanceRequired(e)
-    );
-// Expand multi-day events into per-day occurrences for counting/attendance.
-    allEvents = expandEventsForDailyBuckets(allEventsRaw);
+    allEventsMaster = normalized
+      .filter(e => e._start && getLocalDayKey(e._start) >= todayKey)
+      .filter(passesAttendanceRequired);
 
-    applyView();
+    // Initialize category filter after we know the dataset
+    if (!enabledCategories) initEnabledCategories(allEventsMaster);
+
+    recomputeFilteredEvents();
+
+        applyView();
 
     // Preview-only: auto-rotate views until the user makes a selection
     if (PREVIEW_MODE) startPreviewRotation();
@@ -525,41 +671,6 @@ function buildDateTime(dateStr, timeStr) {
   return d;
 }
 
-
-function getNumericAttendance(e) {
-  const n = Number(e.attendanceEstimate);
-  return Number.isFinite(n) ? n : null;
-}
-
-function passesAttendanceRequired(e) {
-  const n = getNumericAttendance(e);
-  return n !== null && n >= MIN_DISPLAY_ATTENDANCE;
-}
-
-function isPureAttributionNote(note) {
-  const t = String(note || "").trim().toLowerCase();
-  if (!t) return false;
-  // Common patterns we've used historically.
-  return (
-    t === "sourced from predicthq.com" ||
-    t === "source: predicthq.com" ||
-    t === "predicthq.com" ||
-    t === "events by predicthq" ||
-    t.includes("predicthq.com") ||
-    t.includes("events by predicthq")
-  );
-}
-
-function ensureAttributionFooter(container) {
-  if (!container || container.querySelector(".phq-attribution")) return;
-  const a = document.createElement("a");
-  a.className = "muted phq-attribution";
-  a.href = PHQ_ATTRIBUTION_URL;
-  a.target = "_blank";
-  a.rel = "noopener";
-  a.textContent = PHQ_ATTRIBUTION_TEXT;
-  container.appendChild(a);
-}
 function pickField(obj, keys) {
   for (const k of keys) {
     if (obj && obj[k] != null && String(obj[k]).trim() !== "") return obj[k];
@@ -744,6 +855,9 @@ function renderWeekView() {
   });
   app.appendChild(nav);
 
+  // Category filters
+  renderCategoryFilterBar(app, allEventsRaw);
+
   const start = weekStartOverride
     ? startOfDay(weekStartOverride)
     : startOfDay(new Date());
@@ -798,6 +912,7 @@ function renderWeekView() {
   }
 
   applyTopBarIntensity(maxIntensity);
+  renderAttributionFooter(app);
 }
 
 
@@ -853,6 +968,9 @@ function renderMonthView() {
 
   header.appendChild(weekdayRow);
   panel.appendChild(header);
+
+  // Category filters
+  renderCategoryFilterBar(panel, allEventsRaw);
 
   /* ---------- Grid (5 rows total) ---------- */
   for (let rowIdx = 0; rowIdx < ROWS; rowIdx++) {
@@ -926,7 +1044,13 @@ function renderMonthView() {
   /* ---------- Legend ---------- */
   const legend = document.createElement("div");
   legend.className = "muted month-legend";
-  
+  legend.innerHTML = `<span class="legend-item"><span class="legend-swatch legend-ec"></span>Event count</span>` +
+    ` <span class="legend-sep">•</span> ` +
+    `<span class="legend-item"><span class="legend-swatch legend-ea"></span>Estimated attendance</span>`;
+  panel.appendChild(legend);
+
+  renderAttributionFooter(panel);
+
   applyTopBarIntensity(0);
 }
 
@@ -934,6 +1058,8 @@ function syncTopNav() {
   document.querySelectorAll("[data-view]").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.view === currentView);
   });
+
+  renderAttributionFooter(app);
 }
 
 /* =========================================================
@@ -941,6 +1067,11 @@ function syncTopNav() {
    ========================================================= */
 
 function applyView() {
+  // Recompute dataset for current category toggles
+  if (Array.isArray(allEventsMaster) && allEventsMaster.length) {
+    recomputeFilteredEvents();
+  }
+
   // Keep header weather in sync (safe no-op if not loaded)
   renderHeaderWeather();
 
@@ -963,9 +1094,6 @@ function applyView() {
     renderMonthView();
     return;
   }
-  // PredictHQ attribution (required by some plans). Keep it visible without cluttering each card.
-  try { ensureAttributionFooter(document.getElementById('content')); } catch (_) {}
-
 }
 
 /* =========================================================
@@ -1014,6 +1142,9 @@ function renderGroupedEvents(grouped) {
     applyView();
   });
   app.appendChild(nav);
+
+  // Category filters
+  renderCategoryFilterBar(app, allEventsRaw);
 
   Object.keys(grouped).sort().forEach(dayKey => {
     const block = document.createElement("div");
@@ -1105,7 +1236,7 @@ block.style.setProperty("--day-density", dayIntensity);
             const attendance = document.createElement("div");
             attendance.className = "muted";
             attendance.textContent =
-              `Estimated attendance: ~${formatAttendance(shownAttendance)}` +
+              `Attendance: ~${formatAttendance(shownAttendance)}` +
               (e._isMultiDay ? ` (split across ${e._spanDays} days)` : ``);
             c.appendChild(attendance);
           }
@@ -1122,7 +1253,9 @@ block.style.setProperty("--day-density", dayIntensity);
           }
 
           /* ---------- Notes (with divider) ---------- */
-          if (e.notes && String(e.notes).trim() && !isPureAttributionNote(e.notes)) {
+          const notesText = (e.notes && String(e.notes).trim()) ? String(e.notes).trim() : "";
+          const isAttributionOnly = /^sourced from\s+predicthq\.com\.?$/i.test(notesText) || /^source:\s*predicthq/i.test(notesText);
+          if (notesText && !isAttributionOnly) {
             const divider = document.createElement("div");
             divider.style.height = "1px";
             divider.style.background = "#e5e7eb";
@@ -1131,7 +1264,7 @@ block.style.setProperty("--day-density", dayIntensity);
 
             const notes = document.createElement("div");
             notes.className = "muted";
-            notes.textContent = e.notes;
+            notes.textContent = notesText;
             notes.style.padding = "6px 8px";
             notes.style.borderRadius = "6px";
             notes.style.background = "#eef1f5";
@@ -1141,13 +1274,13 @@ block.style.setProperty("--day-density", dayIntensity);
           block.appendChild(c);
         });
     }
-
     // Attendance disclaimer (footnote)
-    const disclaimer = document.createElement("div");
-    disclaimer.className = "muted";
-    disclaimer.textContent =
-      "Attendance estimates are based on publicly available data.";
-    block.appendChild(disclaimer);
+    if (currentView !== "day") {
+      const disclaimer = document.createElement("div");
+      disclaimer.className = "muted";
+      disclaimer.textContent = "Attendance estimates are based on publicly available data.";
+      block.appendChild(disclaimer);
+    }
 
     if (currentView === "day") {
       const wx = buildDayWeatherElement(dayKey);
@@ -1157,6 +1290,8 @@ block.style.setProperty("--day-density", dayIntensity);
 
     app.appendChild(block);
   });
+
+  renderAttributionFooter(app);
 }
 
 /* =========================================================
