@@ -611,27 +611,45 @@ body {
 
   min-width: 0;
 }
-/* Month view: keep count + attendance on one predictable line */
+/* Month view metrics (stacked, readable on mobile) */
 .month-metrics{
   display: flex;
-  gap: 6px;
-  align-items: baseline;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
   justify-content: flex-start;
-
-  /* prevent the old ellipsis behavior from killing attendance */
-  white-space: nowrap;
-  overflow: hidden;
+  margin-top: 2px;
 }
 
 .month-metrics .metric{
-  font-size: 0.68rem;   /* down slightly */
-  line-height: 1.1;
-  color: rgba(15, 23, 42, 0.72);
+  line-height: 1.05;
+  white-space: nowrap;
 }
 
-.month-metrics .metric-ea{
-  font-weight: 850;     /* bold attendance */
+/* Event count (top number) */
+.month-metrics .metric-ec{
+  font-size: 0.74rem;
+  font-weight: 900;
+  color: rgba(var(--primary-rgb), 0.92);
 }
+
+/* Attendance (bottom number) */
+.month-metrics .metric-ea{
+  font-size: 0.66rem;
+  font-weight: 850;
+  color: rgba(47, 167, 181, 0.92); /* accent-steel (subtle) */
+}
+
+/* Tiering (subtle emphasis) */
+.metric-ec.t-ec-1{ opacity: 0.70; }
+.metric-ec.t-ec-2{ opacity: 0.80; }
+.metric-ec.t-ec-3{ opacity: 0.92; }
+.metric-ec.t-ec-4{ opacity: 1.00; }
+
+.metric-ea.t-ea-1{ opacity: 0.70; }
+.metric-ea.t-ea-2{ opacity: 0.82; }
+.metric-ea.t-ea-3{ opacity: 0.92; }
+.metric-ea.t-ea-4{ opacity: 1.00; }
 /* Out-of-range cells */
 .month-day.empty {
   visibility: hidden;
@@ -730,8 +748,8 @@ body {
    ========================================================= */
 
 @media (max-width: 600px) {
-  #app { padding: 10px; }
-
+  /* tighter edges on mobile */
+  #app { padding: 6px; }
   .top-bar { padding: 10px; }
 
   .top-bar .views button {
@@ -739,19 +757,15 @@ body {
     font-size: 0.82rem;
   }
 
+  .month-panel { padding: 10px; }
+
+  .week-days { gap: 4px; margin-bottom: 8px; }
+
   .month-day {
-    min-height: 40px;
-    padding: 5px 6px;
+    min-height: 46px; /* allow stacked metrics */
+    padding: 4px 5px;
   }
 
-  .month-day .metric { font-size: 0.68rem; }
-  .month-day .muted { font-size: 0.62rem; }
-
-  .weather-day {
-    padding: 9px;
-    gap: 8px;
-  }
-}
   /* Category chips: uniform rows on mobile */
   .category-chips{
     display: grid;
@@ -764,6 +778,13 @@ body {
     width: 100%;
     text-align: center;
   }
+
+  .weather-day {
+    padding: 9px;
+    gap: 8px;
+  }
+}
+
 /* =========================================================
    CATEGORY TOGGLES (FILTER CHIPS)
    ========================================================= */
