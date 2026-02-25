@@ -611,7 +611,27 @@ body {
 
   min-width: 0;
 }
+/* Month view: keep count + attendance on one predictable line */
+.month-metrics{
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  justify-content: flex-start;
 
+  /* prevent the old ellipsis behavior from killing attendance */
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.month-metrics .metric{
+  font-size: 0.68rem;   /* down slightly */
+  line-height: 1.1;
+  color: rgba(15, 23, 42, 0.72);
+}
+
+.month-metrics .metric-ea{
+  font-weight: 850;     /* bold attendance */
+}
 /* Out-of-range cells */
 .month-day.empty {
   visibility: hidden;
@@ -732,7 +752,18 @@ body {
     gap: 8px;
   }
 }
+  /* Category chips: uniform rows on mobile */
+  .category-chips{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    justify-items: stretch;
+  }
 
+  .category-chip{
+    width: 100%;
+    text-align: center;
+  }
 /* =========================================================
    CATEGORY TOGGLES (FILTER CHIPS)
    ========================================================= */
@@ -838,3 +869,4 @@ body {
   text-decoration:none;
 }
 .phq-attribution:hover{ text-decoration:underline; }
+
