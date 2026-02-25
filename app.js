@@ -1100,9 +1100,7 @@ function renderMonthView() {
   /* ---------- Legend ---------- */
   const legend = document.createElement("div");
   legend.className = "muted month-legend";
-  legend.innerHTML = `<span class="legend-item"><span class="legend-swatch legend-ec"></span>Event count</span>` +
-    ` <span class="legend-sep">•</span> ` +
-    `<span class="legend-item"><span class="legend-swatch legend-ea"></span>Estimated attendance</span>`;
+  legend.innerHTML = `<div class="legend-line"><span class="legend-label metric-ec">Event count</span></div><div class="legend-line"><span class="legend-label metric-ea">Estimated attendance</span></div>`;
   panel.appendChild(legend);
 
   // Category filters (bottom)
