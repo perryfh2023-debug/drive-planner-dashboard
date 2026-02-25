@@ -1036,19 +1036,27 @@ function renderMonthView() {
       });
       cell.appendChild(dateLabel);
 
-      /* ----- Metrics ----- */
-      if (summary.eventCount > 0) {
-        const ec = document.createElement("div");
-        ec.className = "muted metric";
-        ec.textContent = `${summary.eventCount}`;
-        cell.appendChild(ec);
-      }
+         /* ----- Metrics (compact row so mobile doesn't clip attendance) ----- */
+      if (summary.eventCount > 0 || summary.attendanceSum > 0) {
+        const metrics = document.createElement("div");
+        metrics.className = "month-metrics";
 
-      if (summary.attendanceSum > 0) {
-        const ae = document.createElement("div");
-        ae.className = "muted metric";
-        ae.textContent = `~${formatAttendance(summary.attendanceSum)}`;
-        cell.appendChild(ae);
+        if (summary.eventCount > 0) {
+          const ec = document.createElement("span");
+          ec.className = "metric metric-ec";
+          ec.textContent = `${summary.eventCount}`;
+          metrics.appendChild(ec);
+        }
+
+        if (summary.attendanceSum > 0) {
+          const ae = document.createElement("span");
+          ae.className = "metric metric-ea";
+          // remove prefix marker so the number wins the limited width
+          ae.textContent = `${formatAttendance(summary.attendanceSum)}`;
+          metrics.appendChild(ae);
+        }
+
+        cell.appendChild(metrics);
       }
 
       if (!PREVIEW_MODE) {
@@ -1329,6 +1337,7 @@ block.style.setProperty("--day-density", dayIntensity);
 
 loadEvents();
 loadWeather();
+
 
 
 
