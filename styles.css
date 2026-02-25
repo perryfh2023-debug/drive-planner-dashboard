@@ -637,7 +637,7 @@ body {
 .month-metrics .metric-ea{
   font-size: 0.66rem;
   font-weight: 850;
-  color: rgba(47, 167, 181, 0.92); /* accent-steel (subtle) */
+  color: rgba(var(--primary-rgb), 0.70); /* aligned with event count; less clash */
 }
 
 /* Tiering (subtle emphasis) */
@@ -679,11 +679,33 @@ body {
 }
 
 /* Legend */
-.month-legend {
-  font-size: 0.72rem;
+.month-legend{
+  font-size: 0.70rem;
   margin-top: 8px;
   color: rgba(15, 23, 42, 0.65);
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
 }
+
+.month-legend .legend-line{
+  display: flex;
+  align-items: baseline;
+}
+
+/* Legend labels mirror the month metrics styling */
+.month-legend .metric-ec{
+  font-weight: 850;
+  color: rgba(var(--primary-rgb), 0.92);
+}
+
+.month-legend .metric-ea{
+  font-weight: 750;
+  color: rgba(var(--primary-rgb), 0.70);
+}
+
 
 /* =========================================================
    WEATHER (DAY + WEEK)
