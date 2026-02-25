@@ -829,6 +829,25 @@ function formatAttendance(n) {
 }
 
 
+function tierEventCount(n) {
+  const x = Number(n) || 0;
+  if (x <= 0) return 0;
+  if (x <= 1) return 1;
+  if (x <= 3) return 2;
+  if (x <= 6) return 3;
+  return 4;
+}
+
+function tierAttendance(n) {
+  const x = Number(n) || 0;
+  if (x <= 0) return 0;
+  if (x < 1000) return 1;
+  if (x < 5000) return 2;
+  if (x < 12000) return 3;
+  return 4;
+}
+
+
 /* =========================================================
    INTENSITY
    ========================================================= */
@@ -884,9 +903,6 @@ function renderWeekView() {
   });
   app.appendChild(nav);
 
-  // Category filters
-  renderCategoryFilterBar(app, allEventsMaster);
-
   const start = weekStartOverride
     ? startOfDay(weekStartOverride)
     : startOfDay(new Date());
@@ -941,6 +957,9 @@ function renderWeekView() {
   }
 
   applyTopBarIntensity(maxIntensity);
+  // Category filters (bottom)
+  renderCategoryFilterBar(app, allEventsMaster);
+
   renderAttributionFooter(app);
 }
 
@@ -998,9 +1017,6 @@ function renderMonthView() {
   header.appendChild(weekdayRow);
   panel.appendChild(header);
 
-  // Category filters
-  renderCategoryFilterBar(panel, allEventsMaster);
-
   /* ---------- Grid (5 rows total) ---------- */
   for (let rowIdx = 0; rowIdx < ROWS; rowIdx++) {
     const row = document.createElement("div");
@@ -1039,18 +1055,21 @@ function renderMonthView() {
          /* ----- Metrics (compact row so mobile doesn't clip attendance) ----- */
       if (summary.eventCount > 0 || summary.attendanceSum > 0) {
         const metrics = document.createElement("div");
-        metrics.className = "month-metrics";
+        metrics.className = "month-metrics month-metrics--stack";
+
+        const ecTier = tierEventCount(summary.eventCount);
+        const eaTier = tierAttendance(summary.attendanceSum);
 
         if (summary.eventCount > 0) {
           const ec = document.createElement("span");
-          ec.className = "metric metric-ec";
+          ec.className = `metric metric-ec t-ec-${ecTier}`;
           ec.textContent = `${summary.eventCount}`;
           metrics.appendChild(ec);
         }
 
         if (summary.attendanceSum > 0) {
           const ae = document.createElement("span");
-          ae.className = "metric metric-ea";
+          ae.className = `metric metric-ea t-ea-${eaTier}`;
           // remove prefix marker so the number wins the limited width
           ae.textContent = `${formatAttendance(summary.attendanceSum)}`;
           metrics.appendChild(ae);
@@ -1085,6 +1104,9 @@ function renderMonthView() {
     ` <span class="legend-sep">•</span> ` +
     `<span class="legend-item"><span class="legend-swatch legend-ea"></span>Estimated attendance</span>`;
   panel.appendChild(legend);
+
+  // Category filters (bottom)
+  renderCategoryFilterBar(panel, allEventsMaster);
 
   renderAttributionFooter(panel);
 
@@ -1179,9 +1201,6 @@ function renderGroupedEvents(grouped) {
     applyView();
   });
   app.appendChild(nav);
-
-  // Category filters
-  renderCategoryFilterBar(app, allEventsMaster);
 
   Object.keys(grouped).sort().forEach(dayKey => {
     const block = document.createElement("div");
@@ -1327,6 +1346,9 @@ block.style.setProperty("--day-density", dayIntensity);
 
     app.appendChild(block);
   });
+
+  // Category filters (bottom)
+  renderCategoryFilterBar(app, allEventsMaster);
 
   renderAttributionFooter(app);
 }
